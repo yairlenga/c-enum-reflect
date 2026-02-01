@@ -1,0 +1,10 @@
+{
+    "makefile.configureOnOpen": true,
+    "makefile.launchConfigurations": [
+        {
+            "cwd": "/home/user/github/clang-enum",
+            "binaryPath": "/home/user/github/clang-enum/enum_test1",
+            "binaryArgs": []
+        }
+    ]
+}

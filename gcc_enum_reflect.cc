@@ -357,7 +357,8 @@ static void emit_enum_desc_for(tree enum_type)
     if (!build_lbl_blob(items, blob, offs, ename))
         return;
 
-    char sym_lbl[256], sym_off[256], sym_val[256], sym_desc[256];
+    char sym_nam[256], sym_lbl[256], sym_off[256], sym_val[256], sym_desc[256];
+    snprintf(sym_nam,  sizeof(sym_nam),  "__enum_name_%s", ename);
     snprintf(sym_lbl,  sizeof(sym_lbl),  "__enum_lblstr_%s", ename);
     snprintf(sym_off,  sizeof(sym_off),  "__enum_lbloff_%s", ename);
     snprintf(sym_val,  sizeof(sym_val),  "__enum_vals_%s",   ename);
@@ -366,6 +367,7 @@ static void emit_enum_desc_for(tree enum_type)
     tree lbl_var = emit_const_char_blob(sym_lbl, blob);
     tree off_var = emit_const_u16_array(sym_off, offs);
     tree val_var = emit_const_int_array(sym_val, items);
+    tree nam_var = emit_const_char_blob(sym_nam, ename);
 
     // Create desc var with the *real* type
     tree desc_var = build_decl(BUILTINS_LOCATION, VAR_DECL,
@@ -397,6 +399,9 @@ static void emit_enum_desc_for(tree enum_type)
     CONSTRUCTOR_APPEND_ELT(elts, f_name,
         fold_convert(TREE_TYPE(f_name), build_cstr_ptr_literal(ename)));
 */
+    // name = &__enum_name_<E>
+    CONSTRUCTOR_APPEND_ELT(elts, f_name,
+        ptr_to_first_elem(nam_var, TREE_TYPE(f_name)));
 
     // value_count = N (uint16)
     CONSTRUCTOR_APPEND_ELT(elts, f_value_count,

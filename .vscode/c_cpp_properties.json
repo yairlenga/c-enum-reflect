@@ -4,7 +4,7 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/usr/lib/gcc/x86_64-linux-gnu/13/plugin"
+                "/usr/lib/gcc/x86_64-linux-gnu/13/plugin/include"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang-18",

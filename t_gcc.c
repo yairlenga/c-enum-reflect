@@ -14,5 +14,5 @@ enum_desc_t currency_desc(enum currency c) { return enum_desc_gen(c); }
 int main(int argc, char **argv)
 {
 	enum_desc_t foo = currency_desc((enum currency) 0) ;
-	printf("foo(%d)\n", foo->value_count) ;
+	printf("enum '%s' (%d items)\n", foo->name, foo->value_count) ;
 }

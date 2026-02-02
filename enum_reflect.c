@@ -3,20 +3,38 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-// Implementation of enum_desc functions
 
-#define FLAG_DYNAMIC_ED (1<<0)
+static inline const char * desc_name(enum_desc_t ed) 
+{
+	return ed->name ;
+}
 
-enum_desc_idx enum_desc_find_by_label(enum_desc_t ed, const char *name) 
+static inline int desc_value_count(enum_desc_t ed) 
+{
+	return ed->value_count ;
+}
+
+static inline enum_desc_val value_at(enum_desc_t ed, enum_desc_idx idx) 
+{
+	return ed->values[idx] ;
+}
+
+static inline const char * label_at(enum_desc_t ed, enum_desc_idx idx) 
+{
+	return ed->lbl_str + ed->lbl_off[idx] ;
+}
+
+static inline enum_desc_idx find_by_label(enum_desc_t ed, const char *name)
 {
 	int name_len_p1 = strlen(name)+1 ;
+	const char *lbl_str = ed->lbl_str ;
 	for (int i=0 ; i<ed->value_count ; i++) {
-		if ( !memcmp(ed->lbl_str + ed->lbl_off[i], name, name_len_p1) ) return i ;
+		if ( !memcmp(lbl_str + ed->lbl_off[i], name, name_len_p1) ) return i ;
 	}
 	return ENUM_DESC_NOT_FOUND ;
 }
 
-enum_desc_idx enum_desc_find_by_value(enum_desc_t ed, enum_desc_val value) 
+static inline enum_desc_idx find_by_value(enum_desc_t ed, enum_desc_val value) 
 {
 	for (int i=0 ; i<ed->value_count ; i++) {
 		if ( ed->values[i] == value ) return i ;
@@ -24,32 +42,121 @@ enum_desc_idx enum_desc_find_by_value(enum_desc_t ed, enum_desc_val value)
 	return ENUM_DESC_NOT_FOUND ;
 }
 
+static bool valid_index(enum_desc_t ed, enum_desc_idx idx) 
+{
+	return idx >=0 && idx < ed->value_count ;
+}
+
+
+//--------------------------------------------------------------------------------
+// Implementation of enum_desc functions
+//--------------------------------------------------------------------------------
+
+#define FLAG_DYNAMIC_ED (1<<0)
+
+enum_desc_idx enum_desc_find_by_label(enum_desc_t ed, const char *name) 
+{
+	return find_by_label(ed, name) ;
+}
+
+enum_desc_idx enum_desc_find_by_value(enum_desc_t ed, enum_desc_val value) 
+{
+	return find_by_value(ed, value) ;
+}
+
 const char * enum_desc_label_at(enum_desc_t ed, enum_desc_idx idx)
 {
-	if ( idx < 0 || idx >= ed->value_count ) return NULL ;
+	if ( !valid_index(ed, idx) ) return NULL ;
 	return ed->lbl_str + ed->lbl_off[idx];
 }
 
 enum_desc_val enum_desc_value_at(enum_desc_t ed, enum_desc_idx idx)
 {
-	if ( idx < 0 || idx >= ed->value_count ) return 0 ;
+	if ( !valid_index(ed, idx) ) return 0 ;
 	return ed->values[idx] ;
 }
 
 void *enum_desc_meta_at(enum_desc_t ed, enum_desc_idx idx)
 {
-	if ( idx < 0 || idx >= ed->value_count || !ed->meta ) return NULL ;
+	if ( !valid_index(ed, idx) || !ed->meta ) return NULL ;
 	return ed->meta[idx] ;
 }
 
 const char *enum_desc_name(enum_desc_t ed)
 {
-	return ed->name ;
+	return desc_name(ed) ;
 }
 
 int enum_desc_value_count(enum_desc_t ed)
 {
-	return ed->value_count ;
+	return desc_value_count(ed) ;
+}
+
+//--------------------------------------------------------------------------------
+// Implementation of enum_desc functions
+//--------------------------------------------------------------------------------
+
+const char *enum_refl_name(enum_desc_t ed) {
+	return desc_name(ed) ;
+}
+
+int enum_refl_value_count(enum_desc_t ed) {
+	return desc_value_count(ed) ;
+}
+
+enum_desc_idx enum_refl_find_by_value(enum_desc_t ed, enum_desc_val value)
+{
+	enum_desc_ext_t ext = ed->ext ;
+	if ( ext && ext->find_by_value) return ext->find_by_value(ed, value) ;
+	return find_by_value(ed, value) ;
+}
+
+enum_desc_idx enum_refl_find_by_label(enum_desc_t ed, const char *name)
+{
+	enum_desc_ext_t ext = ed->ext ;
+	if ( ext && ext->find_by_label ) return ext->find_by_label(ed, name) ;
+	return find_by_label(ed, name) ;
+}
+
+enum_desc_val enum_refl_value_at(enum_desc_t ed, enum_desc_idx idx)
+{
+//	enum_desc_ext_t extra = ed->ext ;
+//	if ( extra && extra->label_at ) return extra->value_at(ed, idx) ;
+	return valid_index(ed, idx) ? ed->values[idx] : 0 ;
+}
+
+const char * enum_refl_label_at(enum_desc_t ed, enum_desc_idx idx)
+{
+//	enum_desc_ext_t extra = ed->ext ;
+//	if ( extra && extra->label_at ) return extra->label_at(ed, idx) ;
+	return valid_index(ed, idx) ? enum_desc_label_at(ed, idx) : NULL ;
+}
+
+void *enum_refl_meta_at(enum_desc_t ed, enum_desc_idx idx) 
+{
+	return valid_index(ed, idx) && ed->meta ? ed->meta[idx] : NULL ;
+}
+
+enum_desc_val enum_refl_value_of(enum_desc_t ed, const char *label, enum_desc_val default_value)
+{
+	int idx = enum_refl_find_by_label(ed, label) ;
+	return idx != ENUM_DESC_NOT_FOUND ? enum_desc_value_at(ed, idx) : default_value ;
+}
+
+const char *enum_refl_label_of(enum_desc_t ed, enum_desc_val value, const char *default_label)
+{
+	int idx = enum_refl_find_by_value(ed, value) ;
+	return idx != ENUM_DESC_NOT_FOUND ? enum_desc_label_at(ed, idx) : default_label ;
+}
+
+void *enum_refl_state_of(enum_desc_t ed, enum_desc_val value)
+{
+	int idx = enum_refl_find_by_value(ed, value) ;
+	if ( !valid_index(ed, idx) ) return NULL ;
+	enum_desc_ext_t ext = ed->ext ;
+	void **item_cxt = ext ? ext->item_cxt : NULL ;
+	if ( !item_cxt ) return NULL ;
+	return item_cxt[idx] ;
 }
 
 const struct enum_desc_ext enum_desc_default_ext = {
@@ -66,60 +173,6 @@ static const struct enum_desc_ext enum_desc_dynamic_ext = {
 //	.value_at = enum_desc_value_at,
 } ;
 
-enum_desc_idx enum_refl_find_by_value(enum_desc_t ed, enum_desc_val value)
-{
-	enum_desc_ext_t ext = ed->ext ;
-	if ( ext && ext->find_by_value) return ext->find_by_value(ed, value) ;
-	return enum_desc_find_by_value(ed, value) ;
-}
-
-enum_desc_val enum_refl_value_at(enum_desc_t ed, enum_desc_idx idx)
-{
-//	enum_desc_ext_t extra = ed->ext ;
-//	if ( extra && extra->label_at ) return extra->value_at(ed, idx) ;
-	return enum_desc_value_at(ed, idx) ;
-}
-
-
-const char * enum_refl_label_at(enum_desc_t ed, enum_desc_idx idx)
-{
-//	enum_desc_ext_t extra = ed->ext ;
-//	if ( extra && extra->label_at ) return extra->label_at(ed, idx) ;
-	return enum_desc_label_at(ed, idx) ;
-}
-
-enum_desc_idx enum_refl_find_by_label(enum_desc_t ed, const char *name)
-{
-	enum_desc_ext_t ext = ed->ext ;
-	if ( ext && ext->find_by_label ) return ext->find_by_label(ed, name) ;
-	return enum_desc_find_by_label(ed, name) ;
-}
-
-void *enum_refl_meta_at(enum_desc_t ed, enum_desc_idx idx) 
-{
-	return enum_desc_meta_at(ed, idx) ;
-}
-
-enum_desc_val enum_refl_value_of(enum_desc_t ed, const char *label, enum_desc_val default_value)
-{
-	int idx = enum_refl_find_by_label(ed, label) ;
-	return enum_desc_value_at(ed, idx) ;
-}
-
-const char *enum_refl_label_of(enum_desc_t ed, enum_desc_val value, const char *default_label)
-{
-	int idx = enum_refl_find_by_value(ed, value) ;
-	return idx >= 0 ? enum_desc_label_at(ed, idx) : default_label ;
-}
-
-void *enum_refl_state_of(enum_desc_t ed, enum_desc_val value)
-{
-	int idx = enum_refl_find_by_value(ed, value) ;
-	if  ( idx < 0 || idx >= ed->value_count ) return NULL ;
-	void **item_cxt = ed->ext && ed->ext->item_cxt ;
-	if ( !item_cxt ) return NULL ;
-	return item_cxt[idx] ;
-}
 
 enum_desc_t enum_refl_build(const char *name, struct enum_desc_entry entries[], enum_desc_ext_t ext)
 {

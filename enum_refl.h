@@ -3,6 +3,9 @@
 
 #include "enum_desc.h"
 
+const char *enum_refl_name(enum_desc_t ed) ;
+int enum_refl_value_count(enum_desc_t ed) ;
+
 enum_desc_val enum_refl_value_of(enum_desc_t ed, const char *name, enum_desc_val default_value) ;
 const char *enum_refl_label_of(enum_desc_t ed, enum_desc_val value, const char *default_label) ;
 void *enum_refl_meta_of(enum_desc_t ed, enum_desc_val value) ;
@@ -23,6 +26,6 @@ struct enum_desc_entry {
 }  ;
 
 enum_desc_t enum_refl_build(const char *name, struct enum_desc_entry entries[], enum_desc_ext_t ext) ;
-
+void enum_refl_destroy(enum_desc_t ed) ;
 
 #endif

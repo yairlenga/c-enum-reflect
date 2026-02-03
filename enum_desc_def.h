@@ -5,14 +5,14 @@
 
 /// @brief Enum description structure
 struct enum_desc {
-	const char *name ;
+//	const char *name ;                   // Name is stored at the start of lbl_str blob, no need to duplicate it here.
 	uint16_t value_count ;
 	uint16_t flags ;
 	const enum_desc_val *values ;
 	const uint16_t *lbl_off ;
 	void **meta ;
 	enum_desc_ext_t ext ;
-	const char *lbl_str ;                // null separated list of labels + 8 nul padding.
+	const char *strs ;                // null separated list of name, labels + 8 nul padding.
 } ;
 
 /// @brief 

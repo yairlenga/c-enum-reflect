@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <stdio.h>
 
 typedef const struct enum_desc *enum_desc_t ;
 typedef int16_t enum_desc_idx ;
@@ -22,5 +23,15 @@ void * enum_desc_meta_at(enum_desc_t ed, enum_desc_idx idx) ;
 
 void enum_desc_destroy(enum_desc_t ed) ;
 extern const struct enum_desc_ext enum_desc_default_ext ;
+
+// ENUM_DSC_EXTRA, or GLIBC _STDIO will expose IO functions
+#if !defined(ENUM_DESC_EXTRA) && defined(_STDIO_H)
+#define ENUM_DESC_EXTRA 1
+#endif
+#if ENUM_DESC_EXTRA
+#include <stdbool.h>
+#include <stdio.h>
+void enum_desc_print(FILE *fp, enum_desc_t ed, bool verbose) ;
+#endif
 
 #endif

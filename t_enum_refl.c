@@ -31,10 +31,9 @@ static void test_static_desc(enum_desc_t ed)
 
 static const struct enum_desc s2_desc = {
     .value_count = 4,
-    .name = "s2",
     .values = (const int[5]) { VV1, VV2, VV3, VV4, 0},
-    .lbl_str = "\0VV1\0VV2\0VV3\0VV4\0\0\0\0\0\0\0\0",
-    .lbl_off = (const uint16_t[5]) { 1, 5, 9, 13, 17 },
+    .strs = "s2\0VV1\0VV2\0VV3\0VV4\0\0\0\0\0\0\0\0",
+    .lbl_off = (const uint16_t[5]) { 4, 8, 12, 16, 20 },
 } ;
 
 

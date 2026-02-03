@@ -6,7 +6,7 @@
 
 static inline const char * desc_name(enum_desc_t ed) 
 {
-	return ed->name ;
+	return ed->strs ;
 }
 
 static inline int desc_value_count(enum_desc_t ed) 
@@ -21,13 +21,13 @@ static inline enum_desc_val value_at(enum_desc_t ed, enum_desc_idx idx)
 
 static inline const char * label_at(enum_desc_t ed, enum_desc_idx idx) 
 {
-	return ed->lbl_str + ed->lbl_off[idx] ;
+	return ed->strs + ed->lbl_off[idx] ;
 }
 
 static inline enum_desc_idx find_by_label(enum_desc_t ed, const char *name)
 {
 	int name_len_p1 = strlen(name)+1 ;
-	const char *lbl_str = ed->lbl_str ;
+	const char *lbl_str = ed->strs ;
 	for (int i=0 ; i<ed->value_count ; i++) {
 		if ( !memcmp(lbl_str + ed->lbl_off[i], name, name_len_p1) ) return i ;
 	}
@@ -67,7 +67,7 @@ enum_desc_idx enum_desc_find_by_value(enum_desc_t ed, enum_desc_val value)
 const char * enum_desc_label_at(enum_desc_t ed, enum_desc_idx idx)
 {
 	if ( !valid_index(ed, idx) ) return NULL ;
-	return ed->lbl_str + ed->lbl_off[idx];
+	return ed->strs + ed->lbl_off[idx];
 }
 
 enum_desc_val enum_desc_value_at(enum_desc_t ed, enum_desc_idx idx)
@@ -201,11 +201,11 @@ enum_desc_t enum_refl_build(const char *name, struct enum_desc_entry entries[], 
 	}
 	struct enum_desc *ed = calloc(1, sizeof(*ed)) ;
 	*ed = (struct enum_desc) {
-		.name = name,
+//		.name = name,
 		.flags = FLAG_DYNAMIC_ED,
 		.value_count = count,
 		.values = values,
-		.lbl_str = strs,
+		.strs = strs,
 		.lbl_off = label_off,
 		.meta = meta,
 		.ext = ext ?: &enum_desc_dynamic_ext,
@@ -220,8 +220,20 @@ void enum_desc_destroy(enum_desc_t ed)
 	if ( ed->flags && FLAG_DYNAMIC_ED ) {
 		free((void *) ed->values) ;
 		free((void *) ed->lbl_off) ;
-		free((void *) ed->lbl_str) ;
+		free((void *) ed->strs) ;
 		free((ed->meta)) ;
 		free((void *) ed) ;
 	}
+}
+
+// Debug Helpers
+void enum_desc_print(FILE *fp, enum_desc_t ed, bool verbose)
+{
+	int value_count = enum_desc_value_count(ed) ;
+    fprintf(fp, "Enum '%s' %d items\n", enum_desc_name(ed), value_count) ;
+    for (int i=0 ; i<value_count ; i++ ) {
+		const char *meta_txt = enum_desc_meta_at(ed, i) ;
+		if ( !verbose ) meta_txt = meta_txt ? "YES" : "NO" ;
+		printf("#%d: %d (%s) meta=%s\n", i, (int) enum_desc_value_at(ed, i), enum_desc_label_at(ed, i), meta_txt) ;
+    }
 }

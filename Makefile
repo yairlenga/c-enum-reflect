@@ -52,5 +52,5 @@ $B/t_enum_refl: $B/t_enum_refl.o $B/enum_reflect.o $(MKFILE)
 	gcc $(CFLAGS) $< $B/enum_reflect.o -o $@
 
 clean:
-	rm -f *.o $(TESTS) $(PLUGINS)
+	rm -f $B/*
 

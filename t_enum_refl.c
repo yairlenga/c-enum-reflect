@@ -17,7 +17,7 @@ static void show_desc(enum_desc_t ed)
 
 static void test_static_desc(enum_desc_t ed)
 {
-    show_desc(ed) ;
+    enum_desc_print(stdout, ed, false) ;
 
     printf("val(VV3)=%d\n", enum_desc_find_by_label(ed, "VV3")) ;
     printf("str(VV3)=%d\n", enum_desc_find_by_value(ed, VV3)) ;

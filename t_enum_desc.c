@@ -8,7 +8,7 @@ enum s2 { VV1 = 10, VV2=20, VV3=-30, VV4=12345 } ;
 
 static void test_static_desc(enum_desc_t ed)
 {
-    enum_desc_print(stdout, ed, false) ;
+    enum_desc_print(stdout, ed, true) ;
 
     for (int i=0 ; enum_desc_label_at(ed, i) ; i++) {
         const char *label = enum_desc_label_at(ed, i) ;

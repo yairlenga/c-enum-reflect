@@ -177,7 +177,7 @@ static const struct enum_desc_ext enum_desc_dynamic_ext = {
 enum_desc_t enum_refl_build(const char *name, struct enum_desc_entry entries[], enum_desc_ext_t ext)
 {
 	int count = 0 ;
-	int strs_len = 0 ;
+	int strs_len = strlen(name)+1 ; // include enum name
 	bool has_meta = false ;
 	while ( entries[count].name) {
 		if ( entries[count].meta ) has_meta = true ;
@@ -185,8 +185,9 @@ enum_desc_t enum_refl_build(const char *name, struct enum_desc_entry entries[], 
 		count++ ;
 	}
 	strs_len+=2 ;
-	int off = 1 ;
 	char *strs = calloc(strs_len + _Alignof(max_align_t), 1) ;
+	strcpy(strs, name) ;
+	int off = strlen(name)+1 ;
 	enum_desc_val *values = calloc(count+1, sizeof(*values)) ;
 	uint16_t *label_off = calloc(count+1, sizeof(*label_off)) ;
 	void **meta = has_meta ? calloc(count+1, sizeof(*meta)) : NULL ;

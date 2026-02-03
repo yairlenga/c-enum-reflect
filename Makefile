@@ -1,17 +1,19 @@
 default: all
 
 CFLAGS = -g -Wall -Werror -Iinclude
+CXXFLAGS = -g -Wall -Werror -Iinclude -std=c++11
 
 B = build
 S = src
 T = tests
-TESTS = t_enum_refl t_enum_desc t_gcc1
+TESTS = t_enum_refl t_enum_desc t_gcc1  # t_gpp2
 PLUGINS = $B/gcc_enum_reflect.so
 LIBRARY = $B/libenum_reflect.a
 
 vpath %.c src
 vpath %.cc src
 vpath %.h include
+vpath t_%.cc tests
 vpath t_%.c tests
 
 .PHONY: all clean test plugins
@@ -43,6 +45,9 @@ $B/result.txt: $(TESTS_EXE)
 $B/%.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
+$B/%.o: %.cc
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
 $(LIBRARY): enum_reflect.o
 	rm -f $@.new
 	ar rcs $@.new $^
@@ -54,6 +59,9 @@ $B/gcc_enum_reflect.so: gcc_enum_reflect.cc
 $B/t_gcc1.exe: t_gcc1.c $(LIBRARY) $(PLUGINS)
 	gcc $(CFLAGS) -fplugin=$(PLUGINS) $< -o $@ $(LIBRARY)
 
+$B/t_gpp2.exe: t_gpp2.o $(LIBRARY) $(PLUGINS)
+	$(CXX) $(CXXFLAGS) -fplugin=$(PLUGINS) $< -o $@ $(LIBRARY)
+
 $B/t_enum_desc.exe: t_enum_desc.o $(LIBRARY)
 	gcc $(CFLAGS) -o $@ $^ $(LIBRARY)
 
@@ -63,6 +71,7 @@ $B/t_enum_refl.exe: t_enum_refl.o $(LIBRARY)
 $B/t_enum_desc.o: enum_desc.h enum_refl.h enum_desc_def.h
 $B/t_enum_refl.o: enum_desc.h enum_refl.h enum_desc_def.h
 $B/t_gcc1.o: enum_desc_def.h
+$B/t_gpp2.o: enum_desc_def.h
 
 clean:
 	rm -f $B/*

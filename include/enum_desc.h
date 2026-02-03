@@ -6,6 +6,10 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef const struct enum_desc *enum_desc_t ;
 typedef int16_t enum_desc_idx ;
 typedef int enum_desc_val ;
@@ -32,6 +36,10 @@ extern const struct enum_desc_ext enum_desc_default_ext ;
 #include <stdbool.h>
 #include <stdio.h>
 void enum_desc_print(FILE *fp, enum_desc_t ed, bool verbose) ;
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif

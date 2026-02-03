@@ -3,6 +3,10 @@
 
 #include "enum_desc.h"
 
+#ifdef _cplusplus
+extern "C" {
+#endif
+
 /// @brief Enum description structure
 struct enum_desc {
 //	const char *name ;                  // Name is stored at the start of lbl_str blob, no need to duplicate it here.
@@ -30,5 +34,9 @@ struct enum_desc_ext {
 /// @brief Macro to generate enum description at compile time
 /// Usage: enum_desc_t my_enum_desc = ENUM_DESC(enum my_enum)
 #define ENUM_DESC(T) (enum_desc_gen((T)0))
+
+#ifdef _cplusplus
+}
+#endif
 
 #endif

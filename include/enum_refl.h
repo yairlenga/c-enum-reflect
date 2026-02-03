@@ -3,6 +3,10 @@
 
 #include "enum_desc.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 const char *enum_refl_name(enum_desc_t ed) ;
 int enum_refl_value_count(enum_desc_t ed) ;
 
@@ -27,5 +31,9 @@ struct enum_desc_entry {
 
 enum_desc_t enum_refl_build(const char *name, struct enum_desc_entry entries[], enum_desc_ext_t ext) ;
 void enum_refl_destroy(enum_desc_t ed) ;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

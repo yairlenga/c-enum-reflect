@@ -221,7 +221,7 @@ void enum_desc_destroy(enum_desc_t ed)
 {
 	enum_desc_ext_t ext = ed->ext ;
 	if ( ext && ext->destroy ) ext->destroy(ed) ;
-	if ( ed->flags && FLAG_DYNAMIC_ED ) {
+	if ( ed->flags & FLAG_DYNAMIC_ED ) {
 		free((void *) ed->values) ;
 		free((void *) ed->lbl_off) ;
 		free((void *) ed->strs) ;

@@ -3,6 +3,9 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+const enum_desc_t enum_desc_null = &(struct enum_desc){
+	.strs = "enum_desc_null_enum\0\0\0\0\0\0\0\0",
+} ;
 
 static inline const char * desc_name(enum_desc_t ed) 
 {

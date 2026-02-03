@@ -38,6 +38,8 @@ extern const struct enum_desc_ext enum_desc_default_ext ;
 void enum_desc_print(FILE *fp, enum_desc_t ed, bool verbose) ;
 #endif
 
+extern const enum_desc_t enum_desc_null ;
+
 #ifdef __cplusplus
 }
 #endif

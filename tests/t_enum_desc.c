@@ -55,6 +55,7 @@ static const struct enum_desc s2_desc = {
 
 int main(int argc, char **argv)
 {
+    test_static_desc(enum_desc_null) ;
     test_static_desc1(&s1_desc) ;
     enum_desc_destroy(&s1_desc) ;
     test_static_desc(&s2_desc) ;

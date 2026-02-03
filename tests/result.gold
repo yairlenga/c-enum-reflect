@@ -1,0 +1,91 @@
+Enum 's2' 4 items
+#0: 10 (V1) meta=NO
+#1: 20 (V2) meta=NO
+#2: -30 (V3) meta=NO
+#3: 12345 (V4) meta=NO
+val(VV3)=-1
+str(VV3)=2
+value(-1)=-1
+str(ZZZ)=-1
+str(VV2)=V2
+int(VV4)=-9999
+Enum 's1' 26 items
+#0: 100 (AAA) meta=First
+#1: 101 (BBB) meta=(null)
+#2: 102 (CCC) meta=(null)
+#3: 103 (DDD) meta=(null)
+#4: 104 (EEE) meta=(null)
+#5: 200 (FFF) meta=Fifth
+#6: 201 (GGG) meta=(null)
+#7: 202 (HHH) meta=(null)
+#8: 203 (III) meta=(null)
+#9: 204 (JJJ) meta=(null)
+#10: 300 (KKK) meta=Tenth
+#11: 301 (LLL) meta=(null)
+#12: 302 (MMM) meta=(null)
+#13: 303 (NNN) meta=(null)
+#14: 304 (OOO) meta=(null)
+#15: 400 (PPP) meta=(null)
+#16: 401 (QQQ) meta=(null)
+#17: 402 (RRR) meta=(null)
+#18: 403 (SSS) meta=(null)
+#19: 404 (TTT) meta=(null)
+#20: 500 (UUU) meta=Twentieth
+#21: 501 (VVV) meta=(null)
+#22: 502 (WWW) meta=(null)
+#23: 503 (XXX) meta=(null)
+#24: 504 (YYY) meta=(null)
+#25: 505 (ZZZ) meta=(null)
+Checked #0: val=100 label='AAA': PASS
+Checked #1: val=101 label='BBB': PASS
+Checked #2: val=102 label='CCC': PASS
+Checked #3: val=103 label='DDD': PASS
+Checked #4: val=104 label='EEE': PASS
+Checked #5: val=200 label='FFF': PASS
+Checked #6: val=201 label='GGG': PASS
+Checked #7: val=202 label='HHH': PASS
+Checked #8: val=203 label='III': PASS
+Checked #9: val=204 label='JJJ': PASS
+Checked #10: val=300 label='KKK': PASS
+Checked #11: val=301 label='LLL': PASS
+Checked #12: val=302 label='MMM': PASS
+Checked #13: val=303 label='NNN': PASS
+Checked #14: val=304 label='OOO': PASS
+Checked #15: val=400 label='PPP': PASS
+Checked #16: val=401 label='QQQ': PASS
+Checked #17: val=402 label='RRR': PASS
+Checked #18: val=403 label='SSS': PASS
+Checked #19: val=404 label='TTT': PASS
+Checked #20: val=500 label='UUU': PASS
+Checked #21: val=501 label='VVV': PASS
+Checked #22: val=502 label='WWW': PASS
+Checked #23: val=503 label='XXX': PASS
+Checked #24: val=504 label='YYY': PASS
+Checked #25: val=505 label='ZZZ': PASS
+Enum 's2' 4 items
+#0: 10 (V1) meta=NO
+#1: 20 (V2) meta=NO
+#2: -30 (V3) meta=NO
+#3: 12345 (V4) meta=NO
+val(VV3)=-1
+str(VV3)=2
+value(-1)=-1
+str(ZZZ)=-1
+str(VV2)=V2
+int(VV4)=-9999
+Enum 'e1' 3 items
+#0: 1 (E1)
+#1: 3 (E3)
+#2: 100 (E100)
+str(E3)=1
+val(E100)=2
+val(-1)=-1
+str(ZZZ)=-1
+str(VV2)=?
+int(VV4)=-9999
+Enum 'currency' 5 items
+#0: 840 (USD) meta=(null)
+#1: 978 (EUR) meta=(null)
+#2: 826 (JPY) meta=(null)
+#3: 826 (GBP) meta=(null)
+#4: 36 (AUD) meta=(null)

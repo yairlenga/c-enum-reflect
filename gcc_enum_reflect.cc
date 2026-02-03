@@ -50,6 +50,7 @@ int plugin_is_GPL_compatible;
 /* Globals we discover/collect */
 
 static tree g_enum_desc_record = NULL_TREE;   /* RECORD_TYPE for struct enum_desc */
+static bool field_lookup_done ;
 static struct enum_desc_fields {
     tree f_strs;
     tree f_value_count;
@@ -303,6 +304,28 @@ static tree field_by_name(tree record_type, const char *fname)
     return NULL_TREE;
 }
 
+static void lookup_fields(tree record_type)
+{
+    if (field_lookup_done)
+        return;
+
+    g_enum_desc_fields = {
+        .f_strs = field_by_name(record_type, "strs"),
+        .f_value_count = field_by_name(record_type, "value_count"),
+        .f_lbl_off = field_by_name(record_type, "lbl_off"),
+        .f_values = field_by_name(record_type, "values")
+    };
+
+    if (!g_enum_desc_fields.f_strs ||
+        !g_enum_desc_fields.f_value_count ||
+        !g_enum_desc_fields.f_lbl_off ||
+        !g_enum_desc_fields.f_values)
+    {
+        error("struct %<enum_desc%> missing expected fields");
+    }
+
+    field_lookup_done = true;
+}
 
 static void emit_enum_desc_for(tree enum_type)
 {
@@ -311,15 +334,7 @@ static void emit_enum_desc_for(tree enum_type)
         error("struct %<enum_desc%> not visible (include the header defining struct %<enum_desc%>)");
         return;
     }
-    if ( !g_enum_desc_fields.f_strs) {
-        tree t = g_enum_desc_record ;
-        g_enum_desc_fields = {
-            .f_strs = field_by_name(t, "strs"),
-            .f_value_count = field_by_name(t, "value_count"),
-            .f_lbl_off = field_by_name(t, "lbl_off"),
-            .f_values = field_by_name(t, "values")
-        };
-    }
+    lookup_fields(g_enum_desc_record);
 
     const char *ename = type_name_cstr(enum_type);
     dprintf("%s: emitting enum_desc for %s\n", __func__, ename);

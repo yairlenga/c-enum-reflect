@@ -27,4 +27,8 @@ struct enum_desc_ext {
 //	void *(*extra_at)(enum_desc_t ed, enum_desc_idx idx) ;                  // Extra handle by index, NULL if outside range.
 } ;
 
+/// @brief Macro to generate enum description at compile time
+/// Usage: enum_desc_t my_enum_desc = ENUM_DESC(enum my_enum)
+#define ENUM_DESC(T) (enum_desc_gen((T)0))
+
 #endif

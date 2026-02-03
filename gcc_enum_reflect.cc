@@ -39,6 +39,7 @@
 #include <vector>
 #include <map>
 
+#define streq(a, b) (strcmp((a), (b)) == 0)
     // Uncomment for debug output
 #define dprintf(...)
 // #define dprintf(...) // fprintf(stderr, __VA_ARGS__)
@@ -49,6 +50,13 @@ int plugin_is_GPL_compatible;
 /* Globals we discover/collect */
 
 static tree g_enum_desc_record = NULL_TREE;   /* RECORD_TYPE for struct enum_desc */
+static struct enum_desc_fields {
+    tree f_strs;
+    tree f_value_count;
+    tree f_lbl_off;
+    tree f_values;
+} g_enum_desc_fields;
+
 static hash_set<tree> g_seen_enums;           /* ENUMERAL_TYPE nodes to emit */
 
 static const char *kReflectFnName = "enum_desc_gen";  // magic function to expand
@@ -91,29 +99,6 @@ static tree make_u16_type()
     if (!t) t = build_nonstandard_integer_type(16, /*unsigned=*/1);
     return t;
 #endif
-}
-
-[[maybe_unused]] static tree make_const_char_ptr_type()
-{
-    tree cch = build_qualified_type(char_type_node, TYPE_QUAL_CONST);
-    return build_pointer_type(cch);
-}
-
-[[maybe_unused]] static tree build_cstr_ptr_literal(const char *s)
-{
-    // STRING_CST of type char[N]
-    tree str = build_string_literal((int)strlen(s) + 1, s);
-
-    // desired type: const char *
-    tree cchar = build_qualified_type(char_type_node, TYPE_QUAL_CONST);
-    tree ccharp = build_pointer_type(cchar);
-
-    // &str[0]
-    tree idx0 = build_int_cst(size_type_node, 0);
-    tree ch0  = build4(ARRAY_REF, char_type_node, str, idx0, NULL_TREE, NULL_TREE);
-    tree addr = build_fold_addr_expr(ch0);
-
-    return fold_convert(ccharp, addr);
 }
 
 static tree ptr_to_first_elem(tree array_expr, tree desired_ptr_type)
@@ -199,21 +184,17 @@ static bool extract_enum_items(tree enum_type, std::vector<enum_item_kv> &out)
 static bool build_lbl_blob(const std::vector<enum_item_kv> &items,
                            std::string &blob,
                            std::vector<uint16_t> &offs,
-                           const char *ename)
+                           const char *ename_for_errors)
 {
     blob.clear();
     offs.clear();
     offs.reserve(items.size());
 
-    blob.append(ename).push_back('\0'); // first entry is enum name, then labels start at offset 1   
+    blob.append(ename_for_errors);
+    blob.push_back('\0');
 
     for (auto &it : items)
     {
-        if (blob.size() >= 65536)
-        {
-            error("enum %s: %<lbl_str%> too large for uint16 offsets", ename);
-            return false;
-        }
         offs.push_back((uint16_t)blob.size());
         blob.append(it.label);
         blob.push_back('\0');
@@ -222,7 +203,7 @@ static bool build_lbl_blob(const std::vector<enum_item_kv> &items,
     blob.append(8, '\0');  // required padding
     if (blob.size() >= 65536)
     {
-        error("enum %s: %<lbl_str%> too large for uint16 offsets", ename);
+        error("enum %s: %<lbl_str%> too large for uint16 offsets", ename_for_errors);
         return false;
     }
     return true;
@@ -316,11 +297,12 @@ static tree field_by_name(tree record_type, const char *fname)
         tree id = DECL_NAME(f);
         if (!id) continue;
         const char *n = IDENTIFIER_POINTER(id);
-        if (n && strcmp(n, fname) == 0)
+        if (n && streq(n, fname))
             return f;
     }
     return NULL_TREE;
 }
+
 
 static void emit_enum_desc_for(tree enum_type)
 {
@@ -328,6 +310,15 @@ static void emit_enum_desc_for(tree enum_type)
     {
         error("struct %<enum_desc%> not visible (include the header defining struct %<enum_desc%>)");
         return;
+    }
+    if ( !g_enum_desc_fields.f_strs) {
+        tree t = g_enum_desc_record ;
+        g_enum_desc_fields = {
+            .f_strs = field_by_name(t, "strs"),
+            .f_value_count = field_by_name(t, "value_count"),
+            .f_lbl_off = field_by_name(t, "lbl_off"),
+            .f_values = field_by_name(t, "values")
+        };
     }
 
     const char *ename = type_name_cstr(enum_type);
@@ -363,61 +354,20 @@ static void emit_enum_desc_for(tree enum_type)
     DECL_ARTIFICIAL(desc_var) = 1;
     TREE_USED(desc_var) = 1;
 
-    // Find expected fields by name (order-safe)
-//    tree f_name       = field_by_name(g_enum_desc_record, "name");
-    tree f_name       = field_by_name(g_enum_desc_record, "strs") ;
-    tree f_value_count= field_by_name(g_enum_desc_record, "value_count");
-    tree f_flags      = field_by_name(g_enum_desc_record, "flags");
-    tree f_values     = field_by_name(g_enum_desc_record, "values");
-    tree f_lbl_off    = field_by_name(g_enum_desc_record, "lbl_off");
-    tree f_meta       = field_by_name(g_enum_desc_record, "meta");
-    tree f_ext        = field_by_name(g_enum_desc_record, "ext");
-    tree f_strs       = field_by_name(g_enum_desc_record, "strs");
-
-    if (!f_name || !f_value_count || !f_flags || !f_values || !f_lbl_off || !f_meta || !f_ext || !f_strs)
+    vec<constructor_elt, va_gc> *elts = NULL;
+    hash_map<tree, tree> fv ;
+//    struct enum_desc_fields &f = g_enum_desc_fields ;
+    struct enum_desc_fields &f = g_enum_desc_fields ;
+    fv.put(f.f_value_count, fold_convert(TREE_TYPE(f.f_value_count), build_int_cst(integer_type_node, (int)items.size())));
+    fv.put(f.f_values, ptr_to_first_elem(val_var, TREE_TYPE(f.f_values)));
+    fv.put(f.f_lbl_off, ptr_to_first_elem(off_var, TREE_TYPE(f.f_lbl_off)));
+    fv.put(f.f_strs, ptr_to_first_elem(lbl_var, TREE_TYPE(f.f_strs)));
+    for (tree f = TYPE_FIELDS(g_enum_desc_record); f; f = DECL_CHAIN(f))
     {
-        error("%<enum_desc%> fields missing/renamed; expected name,%<value_count%>,%<flags%>,%<values%>,%<lbl_off%>,%<meta%>,%<ext%>,%<strs%>");
-        return;
+        tree *s = fv.get(f);
+        if ( s ) CONSTRUCTOR_APPEND_ELT(elts, f, *s) ;
     }
 
-    vec<constructor_elt, va_gc> *elts = NULL;
-    // name = "currency"
-/*
-    CONSTRUCTOR_APPEND_ELT(elts, f_name,
-        fold_convert(TREE_TYPE(f_name), build_cstr_ptr_literal(ename)));
-*/
-    // Name stored as first entry in lbl_str, no need to create extra item
-    // name = &__enum_lblstr_<E>
-    //    CONSTRUCTOR_APPEND_ELT(elts, f_name,
-    //    ptr_to_first_elem(lbl_var, TREE_TYPE(f_name)));
-
-    // value_count = N (uint16)
-    CONSTRUCTOR_APPEND_ELT(elts, f_value_count,
-        fold_convert(TREE_TYPE(f_value_count), build_int_cst(integer_type_node, (int)items.size())));
-
-    // flags = 0
-    CONSTRUCTOR_APPEND_ELT(elts, f_flags,
-        fold_convert(TREE_TYPE(f_flags), build_int_cst(integer_type_node, 0)));
-
-    // values = &__enum_vals_<E>
-    CONSTRUCTOR_APPEND_ELT(elts, f_values,
-        ptr_to_first_elem(val_var, TREE_TYPE(f_values)));
-
-    // lbl_off = &__enum_lbloff_<E>
-    CONSTRUCTOR_APPEND_ELT(elts, f_lbl_off,
-        ptr_to_first_elem(off_var, TREE_TYPE(f_lbl_off)));
-
-    // meta = NULL
-    CONSTRUCTOR_APPEND_ELT(elts, f_meta,
-        fold_convert(TREE_TYPE(f_meta), null_pointer_node));
-
-    // ext = NULL
-    CONSTRUCTOR_APPEND_ELT(elts, f_ext,
-        fold_convert(TREE_TYPE(f_ext), null_pointer_node));
-
-    // lbl_str = &__enum_lblstr_<E>
-    CONSTRUCTOR_APPEND_ELT(elts, f_strs,
-        ptr_to_first_elem(lbl_var, TREE_TYPE(f_strs)));
     // Anything not explicitly mentioned is zero-initialized by the constructor.
     DECL_INITIAL(desc_var) = build_constructor(g_enum_desc_record, elts);
     varpool_node::finalize_decl(desc_var);
@@ -430,7 +380,7 @@ static void process_enum_reflect_call(gimple *stmt)
 {
     tree fndecl = gimple_call_fndecl(stmt);
     const char *fname = fndecl_name_cstr(fndecl);
-    if (!fname || std::strcmp(fname, kReflectFnName) != 0)
+    if (!fname || streq(fname, kReflectFnName))
         return;
 
     dprintf("%s: found call to %s\n", __func__, kReflectFnName);
@@ -527,11 +477,12 @@ static void on_finish_type(void *event_data, void *)
         return;
 
     const char *nm = record_tag_name(t);
-    if (nm && strcmp(nm, "enum_desc") == 0)
+    if (nm && streq(nm, "enum_desc"))
     {
         // Now we have the REAL struct enum_desc type from the TU.
         dprintf("%s: Found type %s\n", __func__, nm);
         g_enum_desc_record = t;
+        return ;
     }
 }
 
@@ -574,7 +525,7 @@ static inline bool decl_name_is(tree fndecl, const char *name) {
   tree id = DECL_NAME(fndecl);
   if (!id || TREE_CODE(id) != IDENTIFIER_NODE) return false;
   const char *got = IDENTIFIER_POINTER(id);
-  return got && std::strcmp(got, name) == 0;
+  return got && streq(got, name);
 }
 
 static std::string enum_type_basename(tree enum_type) {
@@ -652,26 +603,6 @@ static tree call_arg0(tree call) {
   return NULL_TREE;
 #endif
 }
-
-[[maybe_unused]] static tree get_callee_fndecl(tree call)
-{
-    if (!call || TREE_CODE(call) != CALL_EXPR)
-        return NULL_TREE;
-
-    tree fn = CALL_EXPR_FN(call);
-    if (!fn)
-        return NULL_TREE;
-
-    // Most common case in C: &enum_desc
-    if (TREE_CODE(fn) == ADDR_EXPR)
-        fn = TREE_OPERAND(fn, 0);
-
-    if (TREE_CODE(fn) == FUNCTION_DECL)
-        return fn;
-
-    return NULL_TREE;
-}
-
 
 // Rewrite "return enum_desc((enum T)0);" to "return &__enum_desc__T;"
 static bool rewrite_return_enum_desc(tree fndecl) {

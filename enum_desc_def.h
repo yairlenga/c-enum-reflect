@@ -5,14 +5,14 @@
 
 /// @brief Enum description structure
 struct enum_desc {
-//	const char *name ;                   // Name is stored at the start of lbl_str blob, no need to duplicate it here.
-	uint16_t value_count ;
-	uint16_t flags ;
-	const enum_desc_val *values ;
-	const uint16_t *lbl_off ;
-	void **meta ;
-	enum_desc_ext_t ext ;
-	const char *strs ;                // null separated list of name, labels + 8 nul padding.
+//	const char *name ;                  // Name is stored at the start of lbl_str blob, no need to duplicate it here.
+	uint16_t value_count ;              // Number of items in the enum, also size of values[] and lbl_off[]
+	uint16_t flags ;			        // bitfield of flags, for internal use. 
+	const enum_desc_val *values ;		// Array of enum values, in declaration order.
+	const uint16_t *lbl_off ;			// Array of offsets into strs for each label, in declaration order.
+	void **meta ;						// Optional array of per-item metadata, in declaration order. NULL if not used.
+	enum_desc_ext_t ext ;				// Optional pointer to extension struct, for dynamic descs or extra features. NULL if not used.
+	const char *strs ;                  // null separated list of name, labels + 8 nul padding.
 } ;
 
 /// @brief 

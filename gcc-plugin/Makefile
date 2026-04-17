@@ -76,3 +76,17 @@ $B/t_gpp2.o: enum_desc_def.h
 clean:
 	rm -f $B/*
 
+clang_enum_reflect.o: src/clang_enum_reflect.cc
+	clang++ -c -fPIC  $< -o $@  $$(llvm-config --cxxflags)
+
+clang.so: clang_enum_reflect.o
+	clang++ -shared -fPIC $<   -o $@  $$(llvm-config --cxxflags --ldflags --system-libs --libs all)
+
+t_clang1.o: t_clang1.c clang.so
+	clang -c -g -Xclang -load -Xclang ./clang.so -Xclang -add-plugin -Xclang enum-desc-inject -Iinclude src/enum_reflect.c t_clang1.c
+
+clang_code.o: src/enum_reflect.c
+	clang -c -g -Iinclude $< -o $@
+
+x: t_clang1.o clang_code.o
+	clang -g $^

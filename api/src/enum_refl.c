@@ -64,7 +64,7 @@ const char *enum_refl_label_of(enum_desc_t ed, enum_desc_val value, const char *
 void *enum_refl_state_of(enum_desc_t ed, enum_desc_val value)
 {
 	int idx = enum_refl_find_by_value(ed, value) ;
-	if ( !valid_index(ed, idx) ) return NULL ;
+	if (idx == ENUM_DESC_NOT_FOUND ) return NULL ;
 	enum_desc_ext_t ext = ed->ext ;
 	void **item_cxt = ext ? ext->item_cxt : NULL ;
 	if ( !item_cxt ) return NULL ;

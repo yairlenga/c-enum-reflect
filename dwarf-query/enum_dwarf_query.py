@@ -319,7 +319,73 @@ class DwarfEnumExporter:
         except Exception:
             return None
 
-    def emit(self, blocks: List[EnumBlock], out: io.TextIOBase) -> None:
+    def _str_blob_size(self, block: EnumBlock) -> int:
+        parts, _ = self._build_c_str_parts(block)
+        return sum(len(p) + 1 for p in parts) + 8
+
+    def _wrap_enum_items(
+        self,
+        items: List[EnumItem],
+        indent: str = "    ",
+        width: int = 72,
+    ) -> List[str]:
+        """
+        Format:
+            NAME = value, NAME2 = value2, ...
+        wrapped to roughly `width` chars total per line.
+        """
+        if not items:
+            return [indent + "(no members)"]
+
+        tokens = [f"{item.name} = {item.value}" for item in items]
+        lines: List[str] = []
+        cur = indent
+
+        for tok in tokens:
+            sep = "" if cur == indent else ", "
+            if len(cur) + len(sep) + len(tok) > width and cur != indent:
+                lines.append(cur)
+                cur = indent + tok
+            else:
+                cur += sep + tok
+
+        if cur != indent:
+            lines.append(cur)
+
+        return lines
+
+    def emit_text(self, blocks: List[EnumBlock], out: io.TextIOBase) -> None:
+        """
+        Emit enums in a simple human-readable text format.
+        """
+        for i, block in enumerate(blocks):
+            values = [item.value for item in block.items]
+            count = len(block.items)
+            min_value = min(values) if values else None
+            max_value = max(values) if values else None
+            blob_size = self._str_blob_size(block)
+
+            attrs: List[str] = [f"count={count}"]
+
+            if block.meta.symbol:
+                attrs.append(f"symbol={block.meta.symbol}")
+            if block.meta.anchor:
+                attrs.append(f"anchor={block.meta.anchor}")
+            if min_value is not None:
+                attrs.append(f"min={min_value}")
+            if max_value is not None:
+                attrs.append(f"max={max_value}")
+            attrs.append(f"bytes={blob_size}")
+
+            out.write(f"Enum: {block.section_id} ({', '.join(attrs)})\n")
+
+            for line in self._wrap_enum_items(block.items, indent="    ", width=72):
+                out.write(line + "\n")
+
+            if i + 1 != len(blocks):
+                out.write("\n")
+
+    def emit_toml(self, blocks: List[EnumBlock], out: io.TextIOBase) -> None:
         out.write('format = "enum-desc-v1"\n')
 
         if blocks:
@@ -360,6 +426,94 @@ class DwarfEnumExporter:
             if i + 1 != len(blocks):
                 out.write("\n")
 
+    def _build_c_str_parts(self, block: EnumBlock) -> tuple[list[str], list[int]]:
+        """
+        Build:
+        parts   = [enum_name, label1, label2, ...]
+        offsets = offsets in strs blob for each label (not enum name)
+
+        For empty enums:
+        parts   = [enum_name, ""]
+        offsets = [len(enum_name) + 1]
+        """
+        enum_name = block.section_id
+        parts = [enum_name]
+        offsets = []
+
+        cur = len(enum_name) + 1   # skip enum_name + '\0'
+
+        if not block.items:
+            parts.append("")
+            offsets.append(cur)
+            return parts, offsets
+
+        for item in block.items:
+            offsets.append(cur)
+            parts.append(item.name)
+            cur += len(item.name) + 1
+
+        return parts, offsets
+
+
+    def _emit_c_block(self, block: EnumBlock, out: io.TextIOBase) -> None:
+        """
+        Emit one enum block as C globals + exported accessor function.
+        Assumes block.section_id and item names are valid C identifiers / safe text.
+        """
+        sym = f"enum_desc_{block.section_id}"
+        parts, offsets = self._build_c_str_parts(block)
+        count = len(block.items)
+
+        out.write(f"static const enum_desc_val {sym}_values[] = {{\n")
+        if count:
+            for item in block.items:
+                out.write(f"    {item.value}, /* {item.name} */\n")
+        else:
+            out.write("    0 /* empty */\n")
+        out.write("};\n\n")
+
+        out.write(f"static const uint16_t {sym}_lbl_off[] = {{\n")
+        if count:
+            for off, item in zip(offsets, block.items):
+                out.write(f"    {off}, /* {item.name} */\n")
+        else:
+            out.write(f"    {offsets[0]}, /* empty */\n")
+        out.write("};\n\n")
+
+        out.write(f"static const char {sym}_strs[] =\n")
+        for p in parts:
+            out.write(f'    "{p}\\0"\n')
+        out.write('    "\\0\\0\\0\\0\\0\\0\\0\\0";\n\n')
+
+        out.write(f"static const struct enum_desc {sym}_obj = {{\n")
+        out.write(f"    .value_count = {count},\n")
+        out.write("    .flags = 0,\n")
+        out.write(f"    .values = {sym}_values,\n")
+        out.write(f"    .lbl_off = {sym}_lbl_off,\n")
+        out.write("    .meta = NULL,\n")
+        out.write("    .ext = NULL,\n")
+        out.write(f"    .strs = {sym}_strs,\n")
+        out.write("};\n\n")
+
+        out.write(f"const struct enum_desc *{sym}(void)\n")
+        out.write("{\n")
+        out.write(f"    return &{sym}_obj;\n")
+        out.write("}\n")
+
+
+    def emit_c(self, blocks: List[EnumBlock], out: io.TextIOBase) -> None:
+        """
+        Emit all blocks as a C source file.
+        """
+        out.write("/* auto-generated by enum_dwarf_query.py */\n")
+        out.write("#include <stdint.h>\n")
+        out.write('#include "enum_desc_def.h"\n\n')
+
+        for i, block in enumerate(blocks):
+            self._emit_c_block(block, out)
+            if i + 1 != len(blocks):
+                out.write("\n")
+
     def print_warnings(self, err: io.TextIOBase) -> None:
         for msg in self._warnings:
             print(f"warning: {msg}", file=err)
@@ -376,6 +530,12 @@ def build_arg_parser() -> argparse.ArgumentParser:
         type=Path,
         help="ELF object, executable, or shared library compiled with DWARF info",
     )
+    p.add_argument(
+        "--format",
+        choices=("test", "toml", "c"),
+        default="text",
+        help="Output format",
+    )   
     p.add_argument(
         "--strict",
         action="store_true",
@@ -404,7 +564,12 @@ def main(argv: Optional[List[str]] = None) -> int:
             include_decl=args.include_decl,
         )
         blocks = exporter.load()
-        exporter.emit(blocks, sys.stdout)
+        if args.format == "c":
+            exporter.emit_c(blocks, sys.stdout)
+        elif args.format == "toml":
+            exporter.emit_toml(blocks, sys.stdout)
+        else:
+            exporter.emit_text(blocks, sys.stdout)
 
         if not args.quiet_warnings:
             exporter.print_warnings(sys.stderr)
@@ -422,7 +587,6 @@ def main(argv: Optional[List[str]] = None) -> int:
     except Exception as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
-
 
 if __name__ == "__main__":
     raise SystemExit(main())

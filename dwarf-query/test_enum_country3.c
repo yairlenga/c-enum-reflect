@@ -1,8 +1,3 @@
-#include <stdlib.h>
-#include <stdio.h>
-
-typedef struct enum_desc *enum_desc_t ;
-
 typedef enum country_code3 {
     ISO3_AFG = 4,    /* Afghanistan */
     ISO3_ALB = 8,    /* Albania */
@@ -197,13 +192,6 @@ typedef enum country_code3 {
     ISO3_ZMB = 894   /* Zambia */
 } country_t ;
 
-const country_t enum_type_country = ISO3_USA ;
-enum_desc_t enum_desc_country ;
+const country_t enum_type_country3 ;
+struct enum_desc *enum_desc_country3 ;
 
-int main(int argc, char **argv)
-{
-    (void) argc ;
-    (void) argv ;
-    printf("currency(%d)=%p", enum_type_country, enum_desc_country ) ;
-//    test() ;
-}

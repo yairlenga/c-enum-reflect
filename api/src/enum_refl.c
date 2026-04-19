@@ -236,10 +236,17 @@ void enum_desc_destroy(enum_desc_t ed)
 void enum_desc_print(FILE *fp, enum_desc_t ed, bool verbose)
 {
 	int value_count = enum_desc_value_count(ed) ;
+	int value_min = 0 ;
+	int value_max = 0 ;
     fprintf(fp, "Enum '%s' %d items\n", enum_desc_name(ed), value_count) ;
     for (int i=0 ; i<value_count ; i++ ) {
-		const char *meta_txt = enum_desc_meta_at(ed, i) ;
-		if ( !verbose ) meta_txt = meta_txt ? "YES" : "NO" ;
-		printf("#%d: %d (%s) meta=%s\n", i, (int) enum_desc_value_at(ed, i), enum_desc_label_at(ed, i), meta_txt) ;
+		const char *item_meta = enum_desc_meta_at(ed, i) ;
+		int item_val = enum_desc_value_at(ed, i) ;
+		if ( !i || item_val < value_min ) value_min = item_val ;
+		if ( !i || item_val > value_max ) value_max = item_val ;
+		const char *item_label = enum_desc_label_at(ed, i) ;
+		const char *meta_txt = verbose ? item_meta ?: "-" : item_meta ? "YES" : "NO" ;
+		printf("#%d: %d (%s) meta=%s\n", i, item_val, item_label, meta_txt) ;
     }
+	printf("Range: [ %d - %d ] , unused=%d\n", value_min, value_max, value_max-value_min+1-value_count) ;
 }

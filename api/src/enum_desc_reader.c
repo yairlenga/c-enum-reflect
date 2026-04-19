@@ -9,7 +9,7 @@
 #include "enum_refl.h"
 
 #define MAX_IDENT_LEN 64
-#define ENUM_LOAD_MAX_ITEMS   200
+#define ENUM_LOAD_MAX_ITEMS   1024
 #define ENUM_LOAD_MAX_TOKENS  (32 * 1024)
 
 enum {

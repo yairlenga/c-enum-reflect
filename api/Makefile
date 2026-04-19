@@ -33,4 +33,4 @@ clean:
 	rm -f $B/*.o $(BIN) $(LIB)
 
 realclean: clean
-	rm -f $B
+	@case "/$B/" in */build/*) sh -x -c "rm -rf $B" ;; esac

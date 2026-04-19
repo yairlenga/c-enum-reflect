@@ -5,3 +5,5 @@ a.out
 old/
 build/
 __pycache__/
+tests/*.result
+

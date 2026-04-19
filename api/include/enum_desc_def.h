@@ -35,6 +35,55 @@ struct enum_desc_ext {
 /// Usage: enum_desc_t my_enum_desc = ENUM_DESC(enum my_enum)
 #define ENUM_DESC(T) (enum_desc_gen((T)0))
 
+#define FLAG_DYNAMIC_ED (1<<0)
+
+//--------------------------------------------------------------------------------
+// Implementation of enum_desc accessors
+//--------------------------------------------------------------------------------
+
+static inline const char * desc_name(enum_desc_t ed) 
+{
+	return ed->strs ;
+}
+
+static inline int desc_value_count(enum_desc_t ed) 
+{
+	return ed->value_count ;
+}
+
+static inline enum_desc_val value_at(enum_desc_t ed, enum_desc_idx idx) 
+{
+	return ed->values[idx] ;
+}
+
+static inline const char * label_at(enum_desc_t ed, enum_desc_idx idx) 
+{
+	return ed->strs + ed->lbl_off[idx] ;
+}
+
+static inline enum_desc_idx find_by_label(enum_desc_t ed, const char *name)
+{
+	int name_len_p1 = strlen(name)+1 ;
+	const char *lbl_str = ed->strs ;
+	for (int i=0 ; i<ed->value_count ; i++) {
+		if ( !memcmp(lbl_str + ed->lbl_off[i], name, name_len_p1) ) return i ;
+	}
+	return ENUM_DESC_NOT_FOUND ;
+}
+
+static inline enum_desc_idx find_by_value(enum_desc_t ed, enum_desc_val value) 
+{
+	for (int i=0 ; i<ed->value_count ; i++) {
+		if ( ed->values[i] == value ) return i ;
+	}
+	return ENUM_DESC_NOT_FOUND ;
+}
+
+static inline bool valid_index(enum_desc_t ed, enum_desc_idx idx) 
+{
+	return idx >=0 && idx < ed->value_count ;
+}
+
 #ifdef _cplusplus
 }
 #endif

@@ -4,104 +4,12 @@
 #include <stddef.h>
 #include <limits.h>
 
-const enum_desc_t enum_desc_null = &(struct enum_desc){
-	.strs = "enum_desc_null_enum\0\0\0\0\0\0\0\0",
-} ;
-
-static inline const char * desc_name(enum_desc_t ed) 
-{
-	return ed->strs ;
-}
-
-static inline int desc_value_count(enum_desc_t ed) 
-{
-	return ed->value_count ;
-}
-
-static inline enum_desc_val value_at(enum_desc_t ed, enum_desc_idx idx) 
-{
-	return ed->values[idx] ;
-}
-
-static inline const char * label_at(enum_desc_t ed, enum_desc_idx idx) 
-{
-	return ed->strs + ed->lbl_off[idx] ;
-}
-
-static inline enum_desc_idx find_by_label(enum_desc_t ed, const char *name)
-{
-	int name_len_p1 = strlen(name)+1 ;
-	const char *lbl_str = ed->strs ;
-	for (int i=0 ; i<ed->value_count ; i++) {
-		if ( !memcmp(lbl_str + ed->lbl_off[i], name, name_len_p1) ) return i ;
-	}
-	return ENUM_DESC_NOT_FOUND ;
-}
-
-static inline enum_desc_idx find_by_value(enum_desc_t ed, enum_desc_val value) 
-{
-	for (int i=0 ; i<ed->value_count ; i++) {
-		if ( ed->values[i] == value ) return i ;
-	}
-	return ENUM_DESC_NOT_FOUND ;
-}
-
-static bool valid_index(enum_desc_t ed, enum_desc_idx idx) 
-{
-	return idx >=0 && idx < ed->value_count ;
-}
-
 
 //--------------------------------------------------------------------------------
-// Implementation of enum_desc functions
+// Implementation of enum_refl functions
 //--------------------------------------------------------------------------------
-
-#define FLAG_DYNAMIC_ED (1<<0)
-
-enum_desc_idx enum_desc_find_by_label(enum_desc_t ed, const char *name) 
-{
-	return find_by_label(ed, name) ;
-}
-
-enum_desc_idx enum_desc_find_by_value(enum_desc_t ed, enum_desc_val value) 
-{
-	return find_by_value(ed, value) ;
-}
-
-const char * enum_desc_label_at(enum_desc_t ed, enum_desc_idx idx)
-{
-	if ( !valid_index(ed, idx) ) return NULL ;
-	return ed->strs + ed->lbl_off[idx];
-}
-
-enum_desc_val enum_desc_value_at(enum_desc_t ed, enum_desc_idx idx)
-{
-	if ( !valid_index(ed, idx) ) return 0 ;
-	return ed->values[idx] ;
-}
-
-void *enum_desc_meta_at(enum_desc_t ed, enum_desc_idx idx)
-{
-	if ( !valid_index(ed, idx) || !ed->meta ) return NULL ;
-	return ed->meta[idx] ;
-}
-
-const char *enum_desc_name(enum_desc_t ed)
-{
-	return desc_name(ed) ;
-}
-
-int enum_desc_value_count(enum_desc_t ed)
-{
-	return desc_value_count(ed) ;
-}
-
-//--------------------------------------------------------------------------------
-// Implementation of enum_desc functions
-//--------------------------------------------------------------------------------
-
 const char *enum_refl_name(enum_desc_t ed) {
-	return desc_name(ed) ;
+	return enum_desc_name(ed) ;
 }
 
 int enum_refl_value_count(enum_desc_t ed) {
@@ -219,34 +127,3 @@ enum_desc_t enum_refl_build(const char *name, struct enum_desc_entry entries[], 
 	return ed ;
 }
 
-void enum_desc_destroy(enum_desc_t ed)
-{
-	enum_desc_ext_t ext = ed->ext ;
-	if ( ext && ext->destroy ) ext->destroy(ed) ;
-	if ( ed->flags & FLAG_DYNAMIC_ED ) {
-		free((void *) ed->values) ;
-		free((void *) ed->lbl_off) ;
-		free((void *) ed->strs) ;
-		free((ed->meta)) ;
-		free((void *) ed) ;
-	}
-}
-
-// Debug Helpers
-void enum_desc_print(FILE *fp, enum_desc_t ed, bool verbose)
-{
-	int value_count = enum_desc_value_count(ed) ;
-	int value_min = 0 ;
-	int value_max = 0 ;
-    fprintf(fp, "Enum '%s' %d items\n", enum_desc_name(ed), value_count) ;
-    for (int i=0 ; i<value_count ; i++ ) {
-		const char *item_meta = enum_desc_meta_at(ed, i) ;
-		int item_val = enum_desc_value_at(ed, i) ;
-		if ( !i || item_val < value_min ) value_min = item_val ;
-		if ( !i || item_val > value_max ) value_max = item_val ;
-		const char *item_label = enum_desc_label_at(ed, i) ;
-		const char *meta_txt = verbose ? item_meta ?: "-" : item_meta ? "YES" : "NO" ;
-		printf("#%d: %d (%s) meta=%s\n", i, item_val, item_label, meta_txt) ;
-    }
-	printf("Range: [ %d - %d ] , unused=%d\n", value_min, value_max, value_max-value_min+1-value_count) ;
-}

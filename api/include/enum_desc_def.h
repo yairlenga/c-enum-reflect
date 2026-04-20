@@ -1,17 +1,26 @@
 #ifndef _ENUM_DESC_DEF_H_
 #define _ENUM_DESC_DEF_H_
 
+#include <stdint.h>
+
 #include "enum_desc.h"
 
 #ifdef _cplusplus
 extern "C" {
 #endif
 
+struct enum_desc_flags {
+	bool is_dynamic: 1 ;               // Set when data structure is malloc. Default: static (no free)
+	bool is_custom: 1 ;                // Set if using non-standard sizes. Default (int value, uint16_t offset)
+	unsigned value_sz: 2 ;             // If is_custom is true: Number of bits for the value field
+	unsigned offset_sz: 2 ;            // If is_custom is true: Number of bits for the offset to the string table
+} ;
+
 /// @brief Enum description structure
 struct enum_desc {
 //	const char *name ;                  // Name is stored at the start of lbl_str blob, no need to duplicate it here.
+	struct enum_desc_flags flags ;      // flags ;
 	uint16_t value_count ;              // Number of items in the enum, also size of values[] and lbl_off[]
-	uint16_t flags ;			        // bitfield of flags, for internal use. 
 	const enum_desc_val *values ;		// Array of enum values, in declaration order.
 	const uint16_t *lbl_off ;			// Array of offsets into strs for each label, in declaration order.
 	void **meta ;						// Optional array of per-item metadata, in declaration order. NULL if not used.
@@ -35,18 +44,18 @@ struct enum_desc_ext {
 /// Usage: enum_desc_t my_enum_desc = ENUM_DESC(enum my_enum)
 #define ENUM_DESC(T) (enum_desc_gen((T)0))
 
-#define FLAG_DYNAMIC_ED (1<<0)
-
 //--------------------------------------------------------------------------------
 // Implementation of enum_desc accessors
 //--------------------------------------------------------------------------------
+
+#include <string.h>
 
 static inline const char * desc_name(enum_desc_t ed) 
 {
 	return ed->strs ;
 }
 
-static inline int desc_value_count(enum_desc_t ed) 
+static inline int desc_item_count(enum_desc_t ed) 
 {
 	return ed->value_count ;
 }

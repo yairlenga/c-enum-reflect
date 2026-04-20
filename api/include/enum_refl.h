@@ -1,6 +1,7 @@
 #ifndef _ENUM_REFL_H_
 #define _ENUM_REFL_H_
 
+
 #include "enum_desc.h"
 
 #ifdef __cplusplus
@@ -32,6 +33,7 @@ struct enum_desc_entry {
 enum_desc_t enum_refl_build(const char *name, struct enum_desc_entry entries[], int n_entries, enum_desc_ext_t ext) ;
 void enum_refl_destroy(enum_desc_t ed) ;
 
+#if ENUM_DESC_EXTRA
 typedef struct enum_desc_source {
 	FILE *fp ;	
 	int lineno ;
@@ -49,6 +51,7 @@ enum_desc_t enum_desc_parse_next(enum_desc_source_t source)  ;
 enum_desc_t enum_repo_lookup(const char *id) ;
 int enum_repo_append(FILE *fp) ;
 void enum_repo_clear(void) ;
+#endif
 
 #ifdef __cplusplus
 }

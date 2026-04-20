@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <limits.h>
-
+#include <stdlib.h>
 
 //--------------------------------------------------------------------------------
 // Implementation of enum_refl functions
@@ -13,7 +13,7 @@ const char *enum_refl_name(enum_desc_t ed) {
 }
 
 int enum_refl_value_count(enum_desc_t ed) {
-	return desc_value_count(ed) ;
+	return desc_item_count(ed) ;
 }
 
 enum_desc_idx enum_refl_find_by_value(enum_desc_t ed, enum_desc_val value)
@@ -116,7 +116,7 @@ enum_desc_t enum_refl_build(const char *name, struct enum_desc_entry entries[], 
 	struct enum_desc *ed = calloc(1, sizeof(*ed)) ;
 	*ed = (struct enum_desc) {
 //		.name = strdup(name),
-		.flags = FLAG_DYNAMIC_ED,
+		.flags = { .is_dynamic = true },
 		.value_count = count,
 		.values = values,
 		.strs = strs,

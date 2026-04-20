@@ -38,7 +38,15 @@ extern const struct enum_desc_ext enum_desc_default_ext ;
 void enum_desc_print(FILE *fp, enum_desc_t ed, bool verbose) ;
 #endif
 
+
 extern const enum_desc_t enum_desc_null ;
+
+#define ENUM_DESC(tag) enum_desc_ ## tag
+
+#define ENUM_DESCRIBE(tag, enum_type) \
+    static const enum_type enum_type_ ## tag ; \
+    static const char *enum_req_ ## tag = #enum_type ; \
+    extern enum_desc_t ENUM_DESC(tag)(void) ;
 
 #ifdef __cplusplus
 }

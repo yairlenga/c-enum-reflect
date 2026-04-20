@@ -1,3 +1,5 @@
+#include "enum_desc.h"
+
 #define ISO2(a,b) ( ((a) << 8) | (b))
 
 enum iso2_country_code {
@@ -276,5 +278,4 @@ enum iso2_country_code {
     ISO2_ZW = ISO2('Z','W')  /* Zimbabwe */
 };
 
-static const enum iso2_country_code enum_type_country2 ;
-struct enum_desc *enum_desc_country2 ;
+ENUM_DESCRIBE(country2, enum iso2_country_code)

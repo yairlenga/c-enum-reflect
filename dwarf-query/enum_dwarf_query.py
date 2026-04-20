@@ -12,9 +12,8 @@ from typing import Dict, Iterable, List, Optional, Set, Tuple
 from elftools.elf.elffile import ELFFile
 from elftools.dwarf.die import DIE
 
-DESC_PREFIX = "enum_desc_"
+REQ_PREFIX = "enum_req_"
 TYPE_PREFIX = "enum_type_"
-
 
 @dataclass
 class EnumItem:
@@ -94,7 +93,7 @@ class DwarfEnumExporter:
 
             blocks: List[EnumBlock] = []
             for desc_symbol in sorted(exported_descs):
-                suffix = desc_symbol[len(DESC_PREFIX):]
+                suffix = desc_symbol[len(REQ_PREFIX):]
                 anchor_symbol = TYPE_PREFIX + suffix
 
                 if anchor_symbol not in variable_dies:
@@ -144,7 +143,7 @@ class DwarfEnumExporter:
 
             for sym in section.iter_symbols():
                 name = sym.name
-                if not name or not name.startswith(DESC_PREFIX):
+                if not name or not name.startswith(REQ_PREFIX):
                     continue
 
                 info = sym["st_info"]
@@ -152,12 +151,12 @@ class DwarfEnumExporter:
                 typ = info["type"]
 
                 # Only consider object-ish globals.
-                if bind not in ("STB_GLOBAL", "STB_WEAK"):
+                if bind not in ("STB_LOCAL"):
                     continue
                 if typ not in ("STT_OBJECT", "STT_NOTYPE"):
                     continue
 
-                suffix = name[len(DESC_PREFIX):]
+                suffix = name[len(REQ_PREFIX):]
                 if not suffix:
                     continue
                 results.add(name)

@@ -1,3 +1,5 @@
+#include "enum_desc.h"
+
 typedef enum country_code3 {
     ISO3_AFG = 4,    /* Afghanistan */
     ISO3_ALB = 8,    /* Albania */
@@ -192,6 +194,4 @@ typedef enum country_code3 {
     ISO3_ZMB = 894   /* Zambia */
 } country_t ;
 
-static const country_t enum_type_country3 ;
-struct enum_desc *enum_desc_country3 ;
-
+ENUM_DESCRIBE(country3, country_t)

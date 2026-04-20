@@ -276,5 +276,5 @@ enum iso2_country_code {
     ISO2_ZW = ISO2('Z','W')  /* Zimbabwe */
 };
 
-const enum iso2_country_code enum_type_country2 ;
+static const enum iso2_country_code enum_type_country2 ;
 struct enum_desc *enum_desc_country2 ;

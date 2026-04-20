@@ -182,5 +182,5 @@ enum currency_code {
     ISO3_ZWL = 932  /* Zimbabwe Dollar */
 } ;
 
-const enum currency_code enum_type_currency ;
+static const enum currency_code enum_type_currency ;
 struct enum_desc *enum_desc_currency ;

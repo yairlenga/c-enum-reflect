@@ -192,6 +192,6 @@ typedef enum country_code3 {
     ISO3_ZMB = 894   /* Zambia */
 } country_t ;
 
-const country_t enum_type_country3 ;
+static const country_t enum_type_country3 ;
 struct enum_desc *enum_desc_country3 ;
 

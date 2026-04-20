@@ -319,6 +319,47 @@ class DwarfEnumExporter:
         except Exception:
             return None
 
+    def print_warnings(self, err: io.TextIOBase) -> None:
+        for msg in self._warnings:
+            print(f"warning: {msg}", file=err)
+
+
+class BaseEmitter:
+    def __init__(self, args):
+        self.args = args
+
+    def emit(self, blocks: List[EnumBlock], out: io.TextIOBase) -> None:
+        raise NotImplementedError
+   
+    def _build_c_str_parts(self, block: EnumBlock) -> tuple[list[str], list[int]]:
+        """
+        Build:
+        parts   = [enum_name, label1, label2, ...]
+        offsets = offsets in strs blob for each label (not enum name)
+
+        For empty enums:
+        parts   = [enum_name, ""]
+        offsets = [len(enum_name) + 1]
+        """
+        enum_name = block.section_id
+        parts = [enum_name]
+        offsets = []
+
+        cur = len(enum_name) + 1   # skip enum_name + '\0'
+
+        if not block.items:
+            parts.append("")
+            offsets.append(cur)
+            return parts, offsets
+
+        for item in block.items:
+            offsets.append(cur)
+            parts.append(item.name)
+            cur += len(item.name) + 1
+
+        return parts, offsets
+
+class TextEmitter(BaseEmitter):
     def _str_blob_size(self, block: EnumBlock) -> int:
         parts, _ = self._build_c_str_parts(block)
         return sum(len(p) + 1 for p in parts) + 8
@@ -354,7 +395,7 @@ class DwarfEnumExporter:
 
         return lines
 
-    def emit_text(self, blocks: List[EnumBlock], out: io.TextIOBase) -> None:
+    def emit(self, blocks: List[EnumBlock], out: io.TextIOBase) -> None:
         """
         Emit enums in a simple human-readable text format.
         """
@@ -384,9 +425,17 @@ class DwarfEnumExporter:
 
             if i + 1 != len(blocks):
                 out.write("\n")
+        ...
 
-    def emit_toml(self, blocks: List[EnumBlock], out: io.TextIOBase) -> None:
+class TomlEmitter(BaseEmitter):
+
+
+
+
+    def emit(self, blocks: List[EnumBlock], out: io.TextIOBase) -> None:
         out.write('format = "enum-desc-v1"\n')
+
+        include_decl = self.args.include_decl
 
         if blocks:
             out.write("\n")
@@ -406,9 +455,9 @@ class DwarfEnumExporter:
                 meta_lines.append(("name", block.meta.name))
             if block.meta.byte_size is not None:
                 meta_lines.append(("byte_size", block.meta.byte_size))
-            if self.include_decl and block.meta.decl_file:
+            if include_decl and block.meta.decl_file:
                 meta_lines.append(("decl_file", block.meta.decl_file))
-            if self.include_decl and block.meta.decl_line is not None:
+            if include_decl and block.meta.decl_line is not None:
                 meta_lines.append(("decl_line", block.meta.decl_line))
 
             for key, value in meta_lines:
@@ -426,33 +475,8 @@ class DwarfEnumExporter:
             if i + 1 != len(blocks):
                 out.write("\n")
 
-    def _build_c_str_parts(self, block: EnumBlock) -> tuple[list[str], list[int]]:
-        """
-        Build:
-        parts   = [enum_name, label1, label2, ...]
-        offsets = offsets in strs blob for each label (not enum name)
 
-        For empty enums:
-        parts   = [enum_name, ""]
-        offsets = [len(enum_name) + 1]
-        """
-        enum_name = block.section_id
-        parts = [enum_name]
-        offsets = []
-
-        cur = len(enum_name) + 1   # skip enum_name + '\0'
-
-        if not block.items:
-            parts.append("")
-            offsets.append(cur)
-            return parts, offsets
-
-        for item in block.items:
-            offsets.append(cur)
-            parts.append(item.name)
-            cur += len(item.name) + 1
-
-        return parts, offsets
+class CEmitter(BaseEmitter):
 
 
     def _emit_c_block(self, block: EnumBlock, out: io.TextIOBase) -> None:
@@ -501,7 +525,7 @@ class DwarfEnumExporter:
         out.write("}\n")
 
 
-    def emit_c(self, blocks: List[EnumBlock], out: io.TextIOBase) -> None:
+    def emit(self, blocks: List[EnumBlock], out: io.TextIOBase) -> None:
         """
         Emit all blocks as a C source file.
         """
@@ -513,10 +537,6 @@ class DwarfEnumExporter:
             self._emit_c_block(block, out)
             if i + 1 != len(blocks):
                 out.write("\n")
-
-    def print_warnings(self, err: io.TextIOBase) -> None:
-        for msg in self._warnings:
-            print(f"warning: {msg}", file=err)
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
@@ -532,7 +552,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     )
     p.add_argument(
         "--format",
-        choices=("test", "toml", "c"),
+        choices=("text", "toml", "c"),
         default="text",
         help="Output format",
     )   
@@ -565,11 +585,13 @@ def main(argv: Optional[List[str]] = None) -> int:
         )
         blocks = exporter.load()
         if args.format == "c":
-            exporter.emit_c(blocks, sys.stdout)
+            emitter = CEmitter(args)
         elif args.format == "toml":
-            exporter.emit_toml(blocks, sys.stdout)
+            emitter = TomlEmitter(args)
         else:
-            exporter.emit_text(blocks, sys.stdout)
+            emitter = TextEmitter(args)
+
+        emitter.emit(blocks, sys.stdout)        
 
         if not args.quiet_warnings:
             exporter.print_warnings(sys.stderr)

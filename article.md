@@ -1,73 +1,65 @@
-# C Enum-to-String: Build-Time Generation from Compiler Debug Info
+# Automatic Enum Stringification in C via Build-Time Code Generation
 
-## Using `enum` for variables with closed set of values.
+## Converting enum values to labels.
 
-In `C` (and `C++`), we use `enum` when we have variable that can have a value from a closed set of related choices. Common use cases are
+If you maintain C code, you’ve probably written enum-to-string conversion functions by hand. They work—until someone adds a new enum value and forgets to update them.
 
-Representing a state:
+When the `enum` values are assigned sequential values, it is possible to perform fast lookup with arrays, using designated initializers:
 ```c
 enum ConnectionState {
+    STATE_NONE,
     STATE_DISCONNECTED,
     STATE_CONNECTING,
     STATE_CONNECTED,
-    STATE_ERROR
+    STATE_ERROR,
+    STATE_LAST
 };
-```
-Return Codes:
-```c
-enum Result {
-    RES_OK,
-    RES_NOT_FOUND,
-    RES_TIMEOUT,
-    RES_INVALID
-};
-```
-Grouping of related constants:
-```c
-enum Direction {
-        DIR_NORTH,
-        DIR_SOUTH,
-        DIR_WEST,
-        DIR_EAST
+
+const char *connectionStateStr(enum ConnectionState state) {
+    static const char *labels[] = {
+        [STATE_NONE] = "STATE_NONE",
+        [STATE_DISCONNECTED] = "STATE_DISCONNECTED",
+        [STATE_CONNECTING] = "STATE_CONNECTING",
+        [STATE_CONNECTED] = "STATE_CONNECTED",
+        [STATE_ERROR] = "STATE_ERROR",
+    } ;
+    return state >= 0 && state < STATE_LAST ? labels[state] : NULL ;
 }
 ```
-Technically, each `enum` has a set of enumerators - each one has a distinct identifier, and is assigned integer value (developers can control the value assignment if needed). We will refer to them as the "labels" and "values".
+In the other case (e.g. the `enum` values span a sparse range), you might have implemented it with a `switch` statement (or some form of lightweight hash table)
+```
+enum errorCode {
+    E_NOT_FOUND = -1,
+    E_PERMISSION = -2,
+    E_OUT_OF_MEMORY = -3,
+    ...
+} ;
 
-In all those cases, using `enum` improve the code. We can use the enumerator identifier in assignment, conditions, pass as parameter. As an extra bonus, when we use a debugger (e.g., `gdb`), we can see the enumerator identifier when we print `enum` variable, and the complete definition of the `enum` (with `ptype`).
-
-## The problem: displaying `enum` values in output, log files and debug printout.
-
-The bad news - if we want to print the `enum` variable in text output - we can only display the enumerator value. Languages that support reflection (`Java`, `Python`, `C#`, ...) will usually provide a stringification function, but in C:
-```c
-#include <stdio.h>
-enum color { C_NONE, C_RED, C_YELLOW, C_GREE } ;
-
-void foo(enum color c) {
-    printf("Color=%d\n", c) ;      // Works - enum as int,
-    printf("Color=%s\n", c) ;      // Error - Enum not a string,
-}
-
-int main(void) {
-    foo(C_RED) ;
-    return 0 ;
+const char *errorCodeStr(enum errorCode code) {
+    switch (code) {
+        case E_NOT_FOUND: return "E_NOT_FOUND" ;
+        case E_PERMISSION: return "E_PERMISSION" ;
+        case E_OUT_OF_MEMORY: return "E_OUT_OF_MEMORY" ;
+        ...
+    } ;
+    return NULL ;
 }
 ```
-Will result in compile error:
-```sh
-x.c:6:20: error: format ‘%s’ expects argument of type ‘char *’, but argument 2 has type ‘unsigned int’ [-Werror=format=]
-    6 |     printf("Color=%s\n", c) ;
-      |                   ~^     ~
-      |                    |     |
-      |                    |     unsigned int
-      |                    char *
-      |                   %d
-```
-Removing this line will result in getting the numeric value of the passed color
-```
-Color=1
-```
+Those lookups are commonly used to create log records, parse configuration options, and print debug output. This implementation has a few limitations:
 
-To address the problem, many libraries provide built-in stringification functions for key `enum` values. Common examples are standard C library `strerror*`, which can convert `errno` to text, but NOT to E_XXX identifier (For legacy reasons, the `errno` is not defined as enum - instead it is implemented as `int` + series of `#define`). Similar function exists in `libcurl`: `curl_easy_strerror(rc)`, which returns error string, but NOT the `CURLE_XXX` enumerator identifier.
+* Requires repetitive work.
+* Easy to miss updates, or introduce incorrect fixes.
+* Hard to maintain if `enum` is defined in external packages. 
+
+Languages that support reflection (`Java`, `Python`, `C#`, ...) will usually provide a stringification function, but in C, there is no built-in, standard capability.
+
+The article discusses a lightweight solution to create stringification functions, so that you can write:
+```
+    printf("Connection State=%s\n", ENUM_LABEL_OF(ConnectionState, state)) ;
+```
+No hard-coded lookup tables. Always kept in sync with the `enum` definition at build time, using tools you already have.
+
+
 
 ## Solution - automatic stringification of `enum` values.
 

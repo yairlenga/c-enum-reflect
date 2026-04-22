@@ -88,8 +88,8 @@ void enum_desc_print(FILE *fp, enum_desc_t ed, bool verbose)
 	int value_min = 0 ;
 	int value_max = 0 ;
     fprintf(fp, "Enum '%s' %d items, dynamic=%s, custom=%s, offset_sz=%d, value_sz=%d\n", enum_desc_name(ed), value_count,
-		ed->flags.is_dynamic ? "Dynamic" : "Static",
-		ed->flags.is_custom ? "Custom" : "Standard",
+		ed->flags.is_dynamic ? "TRUE" : "FALSE",
+		ed->flags.is_custom ? "TRUE" : "FALSE",
 		(int) (ed->flags.is_custom ? 2 << ed->flags.offset_sz : (int) sizeof(*ed->lbl_off)),
 		(int) ed->flags.is_custom ? 2 << ed->flags.value_sz : (int) sizeof(*ed->values)) ;
     for (int i=0 ; i<value_count ; i++ ) {

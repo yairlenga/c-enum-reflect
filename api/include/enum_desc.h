@@ -25,6 +25,9 @@ const char * enum_desc_label_at(enum_desc_t ed, enum_desc_idx idx) ;
 enum_desc_val enum_desc_value_at(enum_desc_t ed, enum_desc_idx idx) ;
 void * enum_desc_meta_at(enum_desc_t ed, enum_desc_idx idx) ;
 
+const char *enum_desc_label_of(enum_desc_t ed, enum_desc_val value) ;
+bool enum_desc_parse(enum_desc_t ed, const char *label, enum_desc_val *value) ;
+
 void enum_desc_destroy(enum_desc_t ed) ;
 extern const struct enum_desc_ext enum_desc_default_ext ;
 
@@ -38,15 +41,18 @@ extern const struct enum_desc_ext enum_desc_default_ext ;
 void enum_desc_print(FILE *fp, enum_desc_t ed, bool verbose) ;
 #endif
 
-
 extern const enum_desc_t enum_desc_null ;
 
-#define ENUM_DESC(tag) enum_desc_ ## tag
+#define ENUM_DESC_FUNC(tag) enum_desc_ ## tag
+#define ENUM_DESC(tag) ENUM_DESC_FUNC(tag)()
 
 #define ENUM_DESCRIBE(tag, enum_type) \
     static const enum_type enum_type_ ## tag ; \
     static const char *enum_req_ ## tag = #enum_type ; \
-    extern enum_desc_t ENUM_DESC(tag)(void) ;
+    extern enum_desc_t ENUM_DESC_FUNC(tag)(void) ; \
+    extern const char * enum_desc_label_of_ ## tag(int val) ;
+
+#define ENUM_LABEL_OF(tag, value) enum_desc_label_of(ENUM_DESC(tag), value)
 
 #ifdef __cplusplus
 }

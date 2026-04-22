@@ -521,7 +521,13 @@ class CEmitter(BaseEmitter):
         out.write(f"const struct enum_desc *{sym}(void)\n")
         out.write("{\n")
         out.write(f"    return &{sym}_obj;\n")
-        out.write("}\n")
+        out.write("}\n\n")
+
+        out.write(f"const char *enum_desc_label_of_{block.section_id}(int value)\n")
+        out.write("{\n")
+        out.write(f"    return enum_desc_label_of(&{sym}_obj, value) ;\n")
+        out.write("}\n\n")
+
 
 
     def emit(self, blocks: List[EnumBlock], out: io.TextIOBase) -> None:

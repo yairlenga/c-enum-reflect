@@ -2,6 +2,7 @@
 #define _ENUM_DESC_DEF_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "enum_desc.h"
 

@@ -165,14 +165,14 @@ CFLAGS += -I $(ENUMDESC_DIR)
 
 ENUMDESC_SRCS = file1.c file2.c ...
 
-$(OBJDIR)/enum_%.o: $(OBJDIR)/%.o
+$(OBJDIR)/gen_%.o: $(OBJDIR)/%.o
     $(ENUMDESC_DIR)/enum_dwarf_query --format=c $< > $(OBJDIR)/enum_$*.c
     $(compile.c) -o $@ $(OBJDIR)/enum_$*.c
 
-$(OBJDIR)/enum_desc.c: $(ENUMDESC_DIR)/enum_desc.c
+$(OBJDIR)/enum_desc.o: $(ENUMDESC_DIR)/enum_desc.c
     $(compile.c) -o $@ $^
 
-ENUMDESC_OBJS += $(OBJDIR)/enum_desc.o $(ENUMDESC_SRCS:%.c=$(OBJDIR)/enum_%.o)
+ENUMDESC_OBJS = $(OBJDIR)/enum_desc.o $(ENUMDESC_SRCS:%.c=$(OBJDIR)/gen_%.o)
 
 $(PROG): ... $(ENUMDESC_OBJS)
     $(LINK.c) -o $@ ... $(ENUMDESC_OBJS)

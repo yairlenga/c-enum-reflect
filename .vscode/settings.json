@@ -1,6 +1,25 @@
 {
     "cSpell.enabled": true,
     "cSpell.enabledFileTypes": {
-        "*": false
-    }
+        "*": false,
+        "*.md": true,
+    },
+    "ltex.enabled": [        
+        "bibtex",
+        "context",
+        "context.tex",
+        "html",
+        "latex",
+        "markdown",
+        "org",
+        "restructuredtext",
+        "rsweave"
+    ],
+    "ltex.checkFrequency": "save",
+    "ltex.diagnosticSeverity": {
+        "MORFOLOGIK_RULE_EN_US":"hint",
+        "PASSIVE_VOICE": "hint",
+        "default": "information"
+    },
+    "sarif-viewer.connectToGithubCodeScanning": "off",
 }

@@ -1,3 +1,7 @@
+<!-- cSpell:words OBJDIR ptype pyelftools -->
+<!-- LTeX: enabled=true -->
+<!-- LTeX: ignore  -->
+
 # Automatic Enum Stringification in C via Build-Time Code Generation
 
 ## Converting enum values to labels.
@@ -59,58 +63,39 @@ The article discusses a lightweight solution to create stringification functions
 ```
 No hard-coded lookup tables. Always kept in sync with the `enum` definition at build time, using tools you already have.
 
-
-
 ## Solution - automatic stringification of `enum` values.
 
-If `C` had reflection, we would have the option to write something:
+If `C` had reflection, we would have the option to write something like:
 ```
 enum color { C_NONE, C_RED=2, C_YELLOW=6, C_GREEN } ;
 void foo(enum color c)
 {
-    printf("Color=%s(%d)\n", color_to_string(c), c) ;
+    printf("Color=%s(%d)\n", color.to_string(c), c) ;
 }
 ```
+The *bad* news is that `C` does not provide this capability directly. The *good* news is that the compiler already has all the information needed to implement it. When code is compiled with debug (`-g`), the full definition of each (referenced) enum is captured in the object file. **We can reuse it !**
 
-The good news is that it relatively simple to auto-generate the "color_to_string" function. We already know that gdb has the ability to show the enumeration name of a variable, and the full enum definition. For the above example, we can verify it with:
+We can verify this using a debugger such as `gdb`. `gdb` will show the symbolic value of each enum variable (with `print`), and the full `enum` description with `ptype`.
+
 ```sh
-gcc -g color.c
-gdb a.out
-Reading symbols from a.out...
-(gdb) b foo
-Breakpoint 1 at 0x1158: file x.c, line 6.
-(gdb) run
-Starting program: /home/user/github/articles/2026-fast-exp/a.out 
-Breakpoint 1, foo (c=C_RED) at x.c:6
-6           printf("Color=%d\n", (int) c) ;
 (gdb) print c
 $1 = C_RED
 (gdb) ptype c
 type = enum color {C_NONE, C_RED = 2, C_YELLOW = 6, C_GREEN}
 ```
 
-Therefore, we can write a small utility to extract the enum description from the object file (more details: [Wikipedia `dwarf`](https://en.wikipedia.org/wiki/DWARF)). Our code now looks like:
+### Minimal Reproducible example:
+
+Here is a small program that demonstrates this:
 
 ```c
+// color.c
 #include <stdio.h>
 
-    // Single header file for all definitions for enum_desc
-#include "enum_desc.h"
-
-enum color { C_NONE, C_RED, C_YELLOW, C_GREE } ;
-
-    // The ENUM_DESCRIBE request enum_descriptor `e_color`, based on the
-    // type 'enum color'. The identifier must be globally unique.
-
-ENUM_DESCRIBE(e_color, enum color)
+enum color { C_NONE, C_RED=2, C_YELLOW=6, C_GREEN } ;
 
 void foo(enum color c) {
-    printf("Color=%d\n", c) ;                          // print as integer
-
-    // The ENUM_LABEL_OF return the stringified value of a value
-    // Based on previous defined enum_descriptor.
-    printf("Color=%s\n", ENUM_LABEL_OF(e_color, c)) ;  // print as a string
-
+    printf("Color=%d\n", (int) c) ;                          // print as integer
 }
 
 int main(void) {
@@ -118,104 +103,107 @@ int main(void) {
     return 0 ;
 }
 ```
-Some explanations:
+We can compile with debug information (`gcc -c`), and inspect the enum with `gdb`:
 
-The `ENUM_DESCRIBE` takes two parameters - tag and type. The tag is a global identifier that will reference the `enum` description. Because the `enum` description will be exposed as global, it is an error for two modules the request the same tag to be exposed - it will result in link error - duplicate symbols.
+```sh
+$ gcc -g color.c
+$ gdb a.out
+Reading symbols from a.out...
+(gdb) b foo
+Breakpoint 1 at 0x1158: file color.c, line 6.
+(gdb) run
+Starting program: /home/user/github/articles/a.out 
+Breakpoint 1, foo (c=C_RED) at color.c:6
+6           printf("Color=%d\n", (int) c) ;
+(gdb) print c
+$1 = C_RED
+(gdb) ptype c
+type = enum color {C_NONE, C_RED = 2, C_YELLOW = 6, C_GREEN}
+```
+The information comes from the DWARF debug metadata that is embedded in the object file, and is available to the debugger (usually, it's embedded in the executable).
 
-The `type` must resolve to an enum type that is recognized inside this compilation unit. This can be:
-* An `enum` defined in a header file that is included.
-* Locally defined `enum` in this file.
-* Locally define `enum` in this function.
+Instead of using this metadata only for debugging, we can extract it at build time and generate lookup tables automatically. This effectively provides reflection for enums in C — without any runtime cost.
 
-### How will it work.
+### How it works.
 
-The 'magic' will happen in phases:
-
-1. The code that has references to `enum` descriptors (ENUM_DESCRIBE(...)) must be compiled with debug mode (-g). 
-2. The object file will be scanned by a python module which will generate the `C` file that will hold the `enum` descriptors.
-3. The newly generated `C` file will be compiled.
-4. The final executable should link the generated object file from step 3, and the support module (single c file).
-
-Minimal example: one source file (test.c). The functionality is implemented in 2 files: a header file 'enum_desc.h' and a source file 'enum_desc.c' 
+The process happens entirely at build time.
+1. Compile the source file with debug information. 
+2. Scan the object file and extract the enum definition (via DWARF)
+3. Generate a C source file containing enum descriptors.
+4. Compile and link the generated code into the final binary.
 
 ```sh
 gcc -c -g test.c
 enum_dwarf_query --format=c test.o > test_enum.c
 gcc -c -g test_enum.c
-gcc -o prog.exe test.c test_enum.c enum_desc.c
+gcc -o -g prog.exe test.c test_enum.c enum_desc.c
 ```
 
-Most C programs are built in `make` or `CMake`. In this case, the build script should rebuild the generated source, whenever the object file is updated. From a practical point of view, better to organize the calls to the enum description code into small number of files - to avoid time consuming scan after each build.
+The final binary contains only plain C data structures, and a small runtime support module (from enum_desc.c). There is no runtime dependency on DWARF tools or libraries, or on a debugger.
 
-In Makefile:
+### Notes on ENUM_DESCRIBE
+
+* The first argument (`e_color`) is a unique identifier for the descriptor.
+* The second argument must resolve to a valid `enum` type, in the current translation unit.
+* The enum can be defined in the same file or in an included header file.
+* Important: the descriptors are generated as global symbols. Using duplicate identifier (for the same or for different enums) will result in link-time error.
+
+You can view the definition of those macros in GitHub Gist: `enum_desc.h`. You will see that the implementation is defining multiple identifiers - all follow the pattern `enum_desc_*`.
+Some identifiers have static scope, some are global objects (functions, variables). You will see those symbols if you will inspect the objects/binaries.
+
+### Integration into CI pipeline
+
+In practice - most of us are using build system (Make or CMake). So the generated files are rebuilt automatically when the source object file is rebuilt. This will ensure that the descriptor is up-to-date, even for enums that are defined in header files (current project, dependent objects, or system header files).
+
+```makefile
+
+# Assuming OBJDIR is location objects and other build artifacts are stored.
+# Set 'OBJDIR = .' to work in the current folder.
+
+$(OBJDIR)/enum_%.o: $(OBJDIR)/%.o
+    enum_dwarf_query --format=c $< > $(OBJDIR)/enum_$*.c
+    $(compile.c) -o $@ $(OBJDIR)/enum_$*.c
+
 ```
-# Binary
-PROG = prog.exe
 
-# List of all source files
-SRCS = file1.c file2.c file3.c enum_file2.c enum_desc.c
+Note that this pipeline requires (reasonable modern) python3 runtime, including the pyelftools:
+* sudo apt install python3-pyelftools
+* sudo python3 -m pip install pyelftools
 
-enum_%.o: %.o
-    enum_dwarf_query --format=c $< > enum_$*.c
-    $(COMPILE.c) -o $@ enum_$*.c
+There is no runtime dependency on DWARF, debug information, or external tools. The binary can be fully stripped—as if nothing unusual ever happened.
 
-$(PROG): $(SRCS:%.c=%.o)
-    $(LINK.c) -o $@ $^
+### Why this approach.
 
-```
+Before settling on this approach, I've experimented with a few other alternatives. The main challenges were 
+1. Keeping definitions in sync as enum values evolve.
+2. Minimizing effort when adding new enums.
+3. Maintaining single source of truth.
+4. Avoiding unnecessary complexity.
 
+The options that I've considered were
+* X-Macros: Require rewriting enums into a custom format, which many codebases cannot or will not adopt.
+* DSL-style (IDL files, proto): Do not work for enums defined outside your control (external libraries, system headers).
+* Manual Lookup Tables: sooner or later, the mapping falls out of sync with the enums.
+* Parsing Source files (AST tools, Clang toolkit, regex): Parsing C correctly is hard: anything less than a full parser is fragile, and may fail in the future.
+* Compiler Plugins: Powerful, but tie the solution to single compiler/toolchain, require significant effort to develop and maintain.
 
+While using the DWARF metadata is not perfect for all situations, it avoids the challenges of the other alternatives:
+* It stays in sync with the source of truth - the way the compiler understands the `enum`.
+* It requires no changes to existing source code and introduces no runtime dependency.
+* It is built on tools already common in C development (gcc, clang, gdb), established and widely-used standard format (DWARF), and simple open source components (python, pyelftools)
 
-More realistic example - using the "libcurl"
+As an extra bonus - the generated "C" code can be easily inspected/reviewed - no magic, no complex runtime, no black boxes.
 
-Will print
-The problem: labels, not numbers
-Functions return enum values — but displaying or logging them gives raw integers. Why that matters in real code.
-§ 1.1 — A motivating example
-Function returns a Status enum. Caller prints it, gets 2. Unhelpful in logs, useless to users.
-§ 1.2 — A second domain
-Same problem in a different context — e.g. Direction or ErrorCode. The pattern is general, not a special case.
-§ 1.3 — The naive fix and why it hurts
-A hand-written switch or string array. Works — until someone adds an enum member and forgets to update it. Sets up sections 2 and 4.
-§ 2
-Generating the conversion table automatically
-Use build-time tooling to extract enum names from debug info and emit C stubs — no manual maintenance.
-§ 2.1 — The approach: read DWARF, emit C
-A small script (Python / awk / shell) reads the compiled object's DWARF debug info and writes a .c file with a string table and lookup function per enum.
-§ 2.2 — A minimal Makefile integration
-The rule: compile the header to an object, run the generator, compile the stub, link everything. Show the 3–4 Makefile lines.
-§ 2.3 — Sample generated output
-Show what the emitted .c looks like — the string array, the bounds check, the function signature. Reader should see it's ordinary C.
-§ 3
-Parsing: symbolic input → enum value
-The inverse direction: a user types "ERROR" in a config file or CLI flag — we need the matching constant.
-§ 3.1 — Linear scan with strcmp
-Loop the same string table from §2, strcmp each entry, return the index. One table, two directions.
-§ 3.2 — Handling no-match
-Return -1, a sentinel, or a dedicated UNKNOWN member. Tradeoffs for each.
-§ 3.3 — Case sensitivity
-Should "error" match "ERROR"? strcasecmp or normalize the input first. Config files usually want case-insensitive.
-§ 4
-Comparing the alternatives
-Other approaches exist — each with real costs. The goal is to show why DWARF is the right foundation.
-§ 4.1 — Hand-coded lookup tables
-Works fine until the enum grows. Every new member is a silent maintenance obligation. The mismatch is undetectable at compile time without extra tooling.
-§ 4.2 — Source code scanning
-Parse the header with regex or a C parser. Fragile: macros, attributes, conditional compilation, and multi-file enums all break naive scanners. Correct parsing requires a full preprocessor.
-§ 4.3 — Compiler extensions
-GCC/Clang plugins or __attribute__ tricks can emit names, but they're compiler-specific, complex to set up, and non-portable.
-§ 4.4 — DWARF: the right level of abstraction
-Already emitted by every major compiler with -g. Standardized format. Macros and attributes are already resolved. Enum names, values, and types are all present — no guessing.
-§ 4.5 — BTF as a future direction
-BPF Type Format is a compact, runtime-accessible type system gaining traction in the Linux kernel ecosystem. Same idea as DWARF but designed for live introspection — worth watching.
-§ 5
-Takeaway, limitations, and extensions
-What to take away, and where the approach needs more thought before you use it blindly.
-§ 5.1 — Core takeaway
-DWARF gives you the truth the compiler already knows. Generate once at build time, use in both directions. No maintenance, no drift.
-§ 5.2 — Bitmask enums vs. value enums
-Flags enums (READ | WRITE) don't map to a single name. The generator needs a different output strategy — decompose into set bits, emit a list.
-§ 5.3 — Synonyms and duplicate values
-C allows two enumerators with the same numeric value. DWARF records both. Which name wins on output? Which is accepted on input? Policy decision — document it.
-§ 5.4 — Further extensions
-Stripping common prefixes (STATUS_OK → "OK"). Generating JSON or YAML tables. Extending to structs. Next article territory.
+## Summary
+
+Enum stringification in C is a common problem, typically solved with manual lookup tables, or custom definitions - both have a maintenance cost and tend to drift out of sync over time. This approach addresses this problem using a different path: reusing the debug metadata already produced by the compiler to generate enum descriptors at build time.
+
+The result is straightforward:
+* No changes to existing enum definitions in the source code.
+* No duplicate definitions.
+* No run-time dependency on external tools or libraries.
+* Always in sync with the enum as compiled.
+
+In practice, the compiler does the heavy lifting - we just reuse it.
+
+This is just the first step — once the metadata is available, it can also be used for parsing configuration files, validation and more. A follow-up article will explore those use cases.

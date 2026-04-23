@@ -270,3 +270,8 @@ This is a personal approach based on general experience working with C codebases
 
 As with any low-level technique, evaluate carefully before adopting it in production.
 
+### Usage and License
+
+The supporting files (`enum_desc.c`, `enum_desc.h`, `enum_dwarf_query.py`) are provided under the MIT license and are intended to be copied and used as-is in your own projects.
+
+You can simply copy and/or modify them into your project and integrate the extractor into your build process - no special packaging or setup is required

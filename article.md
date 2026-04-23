@@ -64,6 +64,16 @@ This article discusses a lightweight solution to create stringification function
 ```
 No hard-coded lookup tables. Always kept in sync with the `enum` definition at build time, using tools you already have.
 
+## Download / Quick Start
+
+## Quick Start
+
+Download the latest minimal package (~20KB):
+
+https://github.com/yairlenga/c-enum-reflect/releases/latest
+
+See the [Releases](https://github.com/yairlenga/c-enum-reflect/releases/) page for other versions and packages.
+
 ## Solution - automatic stringification of `enum` values
 
 If `C` had reflection, we would have the option to write something like:
@@ -116,12 +126,16 @@ int main(void) {
 
 ### How it works
 
+
 The process happens entirely at build time.
 1. Compile the source file with debug information. 
 2. Scan the object file and extract the enum definition (via DWARF)
 3. Generate a C source file containing enum descriptors.
 4. Compile and link the generated code into the final binary.
 
+![enum stringification](enum_reflection.png)
+
+### Example:
 ```sh
 gcc -c -g test2.c
 enum_dwarf_query --format=c test2.o > enum_test2.c

@@ -4,9 +4,9 @@
 
 # Automatic Enum Stringification in C via Build-Time Code Generation
 
-## Converting enum values to labels.
+## Converting enum values to labels
 
-If you maintain C code, you’ve probably written enum-to-string conversion functions by hand. They work—until someone adds a new enum value and forgets to update them.
+If you maintain C code, you’ve probably written enum-to-string conversion functions by hand. They work - until someone adds a new enum value and forgets to update them.
 
 When the `enum` values are assigned sequential values, it is possible to perform fast lookup with arrays, using designated initializers:
 ```c
@@ -31,7 +31,7 @@ const char *connectionStateStr(enum ConnectionState state) {
 }
 ```
 In the other case (e.g. the `enum` values span a sparse range), you might have implemented it with a `switch` statement (or some form of lightweight hash table)
-```
+```c
 enum errorCode {
     E_NOT_FOUND = -1,
     E_PERMISSION = -2,
@@ -57,16 +57,18 @@ Those lookups are commonly used to create log records, parse configuration optio
 
 Languages that support reflection (`Java`, `Python`, `C#`, ...) will usually provide a stringification function, but in C, there is no built-in, standard capability.
 
-The article discusses a lightweight solution to create stringification functions, so that you can write:
-```
+This article discusses a lightweight solution to create stringification functions, so that you can write:
+
+```c
     printf("Connection State=%s\n", ENUM_LABEL_OF(ConnectionState, state)) ;
 ```
 No hard-coded lookup tables. Always kept in sync with the `enum` definition at build time, using tools you already have.
 
-## Solution - automatic stringification of `enum` values.
+## Solution - automatic stringification of `enum` values
 
 If `C` had reflection, we would have the option to write something like:
-```
+
+```c
 enum color { C_NONE, C_RED=2, C_YELLOW=6, C_GREEN } ;
 void foo(enum color c)
 {
@@ -84,18 +86,26 @@ $1 = C_RED
 type = enum color {C_NONE, C_RED = 2, C_YELLOW = 6, C_GREEN}
 ```
 
-### Minimal Reproducible example:
+See appendix [Background: Full example for `enum` metadata with `gdb`](#background-full-example-for-enum-metadata-with-gdb) at the end.
 
-Here is a small program that demonstrates this:
+Instead of using this metadata only for debugging, we can extract it at build time and generate lookup tables automatically. This effectively provides reflection for `enums` in C - without any runtime cost.
+
+### Minimal example - using generated `enum` descriptions
 
 ```c
-// color.c
+// test2.c
 #include <stdio.h>
+#include "enum_desc.h"
 
-enum color { C_NONE, C_RED=2, C_YELLOW=6, C_GREEN } ;
+enum color { C_NONE, C_RED, C_YELLOW, C_GREEN } ;
+
+// Request enum descriptor e_color that will describe enum color
+ENUM_DESCRIBE(e_color, enum color)
 
 void foo(enum color c) {
-    printf("Color=%d\n", (int) c) ;                          // print as integer
+    printf("Color=%d\n", c) ;
+    // print stringified label for c
+    printf("Color=%s\n", ENUM_LABEL_OF(e_color, c)) ; 
 }
 
 int main(void) {
@@ -103,28 +113,8 @@ int main(void) {
     return 0 ;
 }
 ```
-We can compile with debug information (`gcc -c`), and inspect the enum with `gdb`:
 
-```sh
-$ gcc -g color.c
-$ gdb a.out
-Reading symbols from a.out...
-(gdb) b foo
-Breakpoint 1 at 0x1158: file color.c, line 6.
-(gdb) run
-Starting program: /home/user/github/articles/a.out 
-Breakpoint 1, foo (c=C_RED) at color.c:6
-6           printf("Color=%d\n", (int) c) ;
-(gdb) print c
-$1 = C_RED
-(gdb) ptype c
-type = enum color {C_NONE, C_RED = 2, C_YELLOW = 6, C_GREEN}
-```
-The information comes from the DWARF debug metadata that is embedded in the object file, and is available to the debugger (usually, it's embedded in the executable).
-
-Instead of using this metadata only for debugging, we can extract it at build time and generate lookup tables automatically. This effectively provides reflection for enums in C — without any runtime cost.
-
-### How it works.
+### How it works
 
 The process happens entirely at build time.
 1. Compile the source file with debug information. 
@@ -133,46 +123,71 @@ The process happens entirely at build time.
 4. Compile and link the generated code into the final binary.
 
 ```sh
-gcc -c -g test.c
-enum_dwarf_query --format=c test.o > test_enum.c
-gcc -c -g test_enum.c
-gcc -o -g prog.exe test.c test_enum.c enum_desc.c
+gcc -c -g test2.c
+enum_dwarf_query --format=c test2.o > enum_test2.c
+gcc -c -g enum_test2.c
+gcc -g -o prog.exe test2.c enum_test2.c enum_desc.c
 ```
 
 The final binary contains only plain C data structures, and a small runtime support module (from enum_desc.c). There is no runtime dependency on DWARF tools or libraries, or on a debugger.
 
-### Notes on ENUM_DESCRIBE
+### Notes on ENUM_DESCRIBE, ENUM_LABEL_OF
 
+The `ENUM_DESCRIBE` macro marks enum types that we want to generate metadata for.
 * The first argument (`e_color`) is a unique identifier for the descriptor.
 * The second argument must resolve to a valid `enum` type, in the current translation unit.
 * The enum can be defined in the same file or in an included header file.
-* Important: the descriptors are generated as global symbols. Using duplicate identifier (for the same or for different enums) will result in link-time error.
+* Important: the descriptors are generated as global symbols. Using the same identifier (for the same or for different enums) will result in link-time error.
+
+The `ENUM_LABEL_OF` macro is expanded to a call to retrieve the generated metadata.
+* The first argument is the unique identifier.
+* The second argument is an enum value to be described.
+* Returns NULL, if enum value does not have a label.
 
 You can view the definition of those macros in GitHub Gist: `enum_desc.h`. You will see that the implementation is defining multiple identifiers - all follow the pattern `enum_desc_*`.
-Some identifiers have static scope, some are global objects (functions, variables). You will see those symbols if you will inspect the objects/binaries.
+Some identifiers have static scope, some are global objects (functions, variables). If you inspect the objects/binaries, you will see those symbols.
 
 ### Integration into CI pipeline
 
-In practice - most of us are using build system (Make or CMake). So the generated files are rebuilt automatically when the source object file is rebuilt. This will ensure that the descriptor is up-to-date, even for enums that are defined in header files (current project, dependent objects, or system header files).
+In practice - most projects use a build system (Make or CMake). So the generated files are rebuilt automatically when the source object file is rebuilt. This will ensure that the descriptor is up-to-date, even for enums that are defined in header files (current project, dependent objects, or system header files).
 
+Adding the following to your Makefile will automate the build:
+
+<!-- cSpell:disable -->
 ```makefile
 
-# Assuming OBJDIR is location objects and other build artifacts are stored.
-# Set 'OBJDIR = .' to work in the current folder.
+# ENUMDESC_DIR - Source location where enum_desc source files are (.c, .h and python parser)
+# ENUMDESC_SRCS - list of source files that have call ENUM_DESCRIBE
+# OBJDIR - directory where generated files (objects and sources) will be stored.
+# PROG - path to binary, which should link generated enum_* objects.
+
+CFLAGS += -I $(ENUMDESC_DIR)
+
+ENUMDESC_SRCS = file1.c file2.c ...
 
 $(OBJDIR)/enum_%.o: $(OBJDIR)/%.o
-    enum_dwarf_query --format=c $< > $(OBJDIR)/enum_$*.c
+    $(ENUMDESC_DIR)/enum_dwarf_query --format=c $< > $(OBJDIR)/enum_$*.c
     $(compile.c) -o $@ $(OBJDIR)/enum_$*.c
 
+$(OBJDIR)/enum_desc.c: $(ENUMDESC_DIR)/enum_desc.c
+    $(compile.c) -o $@ $^
+
+ENUMDESC_OBJS += $(OBJDIR)/enum_desc.o $(ENUMDESC_SRCS:%.c=$(OBJDIR)/enum_%.o)
+
+$(PROG): ... $(ENUMDESC_OBJS)
+    $(LINK.c) -o $@ ... $(ENUMDESC_OBJS)
 ```
+<!-- cSpell:enable -->
 
 Note that this pipeline requires (reasonable modern) python3 runtime, including the pyelftools:
-* sudo apt install python3-pyelftools
-* sudo python3 -m pip install pyelftools
+```sh
+sudo apt install python3-pyelftools
+sudo python3 -m pip install pyelftools
+```
 
-There is no runtime dependency on DWARF, debug information, or external tools. The binary can be fully stripped—as if nothing unusual ever happened.
+There is no runtime dependency on DWARF, debug information, or external tools. The binary can be fully stripped - as if nothing unusual ever happened.
 
-### Why this approach.
+### Why this approach
 
 Before settling on this approach, I've experimented with a few other alternatives. The main challenges were 
 1. Keeping definitions in sync as enum values evolve.
@@ -206,4 +221,52 @@ The result is straightforward:
 
 In practice, the compiler does the heavy lifting - we just reuse it.
 
-This is just the first step — once the metadata is available, it can also be used for parsing configuration files, validation and more. A follow-up article will explore those use cases.
+This is just the first step - once the metadata is available, it can also be used for parsing configuration files, validation and more. A follow-up article will explore those use cases.
+
+## Appendices
+
+### Background: Full example for `enum` metadata with `gdb`
+Here is a small program that shows `enum` metadata:
+
+```c
+// color.c
+#include <stdio.h>
+
+enum color { C_NONE, C_RED=2, C_YELLOW=6, C_GREEN } ;
+
+void foo(enum color c) {
+    printf("Color=%d\n", (int) c) ;                          // print as integer
+}
+
+int main(void) {
+    foo(C_RED) ;
+    return 0 ;
+}
+```
+We can compile with debug information (`gcc -g`), and inspect the enum with `gdb`:
+
+```sh
+$ gcc -g color.c
+$ gdb a.out
+Reading symbols from a.out...
+(gdb) b foo
+Breakpoint 1 at 0x1158: file color.c, line 6.
+(gdb) run
+Starting program: /home/user/github/articles/a.out 
+Breakpoint 1, foo (c=C_RED) at color.c:6
+6           printf("Color=%d\n", (int) c) ;
+(gdb) print c
+$1 = C_RED
+(gdb) ptype c
+type = enum color {C_NONE, C_RED = 2, C_YELLOW = 6, C_GREEN}
+```
+The information comes from the DWARF debug metadata that is embedded in the object file, and is available to the debugger (usually, it's embedded in the executable).
+
+### Disclaimer
+
+The examples and benchmarks in this article, including linked code snippets, are simplified and reconstructed for illustration purposes. They are not taken from any production system, and do not reflect the design or implementation of any specific codebase.
+
+This is a personal approach based on general experience working with C codebases. It does not represent any official guideline or the opinion of my employer.
+
+As with any low-level technique, evaluate carefully before adopting it in production.
+

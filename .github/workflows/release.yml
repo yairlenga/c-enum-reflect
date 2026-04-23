@@ -1,0 +1,50 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify dist/minimal exists
+        run: |
+          test -d dist/minimal
+          ls -l dist/minimal
+
+      - name: Build ZIP artifact
+        run: |
+          set -eu
+
+          VERSION="${GITHUB_REF_NAME#v}"
+          PKG="enum-desc-${VERSION}-minimal"
+
+          rm -rf out
+          mkdir -p "out/${PKG}"
+
+          cp dist/minimal/* "out/${PKG}/"
+
+          cd out
+          zip -r "${PKG}.zip" "${PKG}"
+
+      - name: Create GitHub release and upload ZIP
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -eu
+
+          VERSION="${GITHUB_REF_NAME#v}"
+          PKG="enum-desc-${VERSION}-minimal"
+
+          gh release create "${GITHUB_REF_NAME}" \
+            "out/${PKG}.zip" \
+            --generate-notes

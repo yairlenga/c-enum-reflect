@@ -1,6 +1,6 @@
 default: all
 
-B = build/api
+B = build
 T = tests
 BIN = $B/enum_reflect.exe
 LIB = $B/enum_reflect.a
@@ -36,7 +36,7 @@ $T/test1.result: $T/sample.enum.txt $(BIN)
 	$(BIN) < $< > $@
 
 %.t: $T/%.result $T/%.gold
-	diff $< $T/*.gold
+	diff $< $T/$*.gold
 
 
 clean:

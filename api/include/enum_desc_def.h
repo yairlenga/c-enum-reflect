@@ -21,8 +21,8 @@ struct enum_desc_flags {
 struct enum_desc {
 //	const char *name ;                  // Name is stored at the start of lbl_str blob, no need to duplicate it here.
 	struct enum_desc_flags flags ;      // flags ;
-	uint16_t value_count ;              // Number of items in the enum, also size of values[] and lbl_off[]
-	const enum_desc_val *values ;		// Array of enum values, in declaration order.
+	uint16_t item_count ;              // Number of items in the enum, also size of values[] and lbl_off[]
+	const int *values ;		// Array of enum values, in declaration order.
 	const uint16_t *lbl_off ;			// Array of offsets into strs for each label, in declaration order.
 	void **meta ;						// Optional array of per-item metadata, in declaration order. NULL if not used.
 	enum_desc_ext_t ext ;				// Optional pointer to extension struct, for dynamic descs or extra features. NULL if not used.
@@ -34,11 +34,11 @@ struct enum_desc_ext {
 	void *enum_cxt ;                                                        // private data, free by destroy
 	void **item_cxt ;														// private per-item data, free by destroy
 	void (*destroy)(enum_desc_t ed) ;
-	enum_desc_idx (*find_by_value)(enum_desc_t ed, enum_desc_val value) ;
-	enum_desc_idx (*find_by_label)(enum_desc_t ed, const char *label) ;
-//	const char *(*label_at)(enum_desc_t ed, enum_desc_idx idx) ;    		// Name by index, NULL if outside range
-//	enum_desc_val (*value_at)(enum_desc_t ed, enum_desc_idx idx) ;          // value by index, 0 if outside range.
-//	void *(*extra_at)(enum_desc_t ed, enum_desc_idx idx) ;                  // Extra handle by index, NULL if outside range.
+	int (*find_by_value)(enum_desc_t ed, int value) ;
+	int (*find_by_label)(enum_desc_t ed, const char *label) ;
+//	const char *(*label_at)(enum_desc_t ed, int idx) ;    		// Name by index, NULL if outside range
+//	enum_desc_val (*value_at)(enum_desc_t ed, int idx) ;          // value by index, 0 if outside range.
+//	void *(*extra_at)(enum_desc_t ed, int idx) ;                  // Extra handle by index, NULL if outside range.
 } ;
 
 /// @brief Macro to generate enum description at compile time
@@ -57,40 +57,40 @@ static inline const char * desc_name(enum_desc_t ed)
 
 static inline int desc_item_count(enum_desc_t ed) 
 {
-	return ed->value_count ;
+	return ed->item_count ;
 }
 
-static inline enum_desc_val value_at(enum_desc_t ed, enum_desc_idx idx) 
+static inline int value_at(enum_desc_t ed, int idx) 
 {
 	return ed->values[idx] ;
 }
 
-static inline const char * label_at(enum_desc_t ed, enum_desc_idx idx) 
+static inline const char * label_at(enum_desc_t ed, int idx) 
 {
 	return ed->strs + ed->lbl_off[idx] ;
 }
 
-static inline enum_desc_idx find_by_label(enum_desc_t ed, const char *name)
+static inline int find_by_label(enum_desc_t ed, const char *name)
 {
 	int name_len_p1 = strlen(name)+1 ;
 	const char *lbl_str = ed->strs ;
-	for (int i=0 ; i<ed->value_count ; i++) {
+	for (int i=0 ; i<ed->item_count ; i++) {
 		if ( !memcmp(lbl_str + ed->lbl_off[i], name, name_len_p1) ) return i ;
 	}
 	return ENUM_DESC_NOT_FOUND ;
 }
 
-static inline enum_desc_idx find_by_value(enum_desc_t ed, enum_desc_val value) 
+static inline int find_by_value(enum_desc_t ed, int value) 
 {
-	for (int i=0 ; i<ed->value_count ; i++) {
+	for (int i=0 ; i<ed->item_count ; i++) {
 		if ( ed->values[i] == value ) return i ;
 	}
 	return ENUM_DESC_NOT_FOUND ;
 }
 
-static inline bool valid_index(enum_desc_t ed, enum_desc_idx idx) 
+static inline bool valid_index(enum_desc_t ed, int idx) 
 {
-	return idx >=0 && idx < ed->value_count ;
+	return idx >=0 && idx < ed->item_count ;
 }
 
 #ifdef _cplusplus

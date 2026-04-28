@@ -8,9 +8,9 @@ enum s2 { VV1 = 10, VV2=20, VV3=-30, VV4=12345 } ;
 
 static void show_desc(enum_desc_t ed)
 {
-    int value_count = enum_desc_value_count(ed) ;
-    printf("Enum '%s' %d items\n", enum_desc_name(ed), value_count) ;
-    for (int i=0 ; i<value_count ; i++ ) {
+    int item_count = enum_desc_item_count(ed) ;
+    printf("Enum '%s' %d items\n", enum_desc_name(ed), item_count) ;
+    for (int i=0 ; i<item_count ; i++ ) {
         printf("#%d: %d (%s)\n", i, enum_desc_value_at(ed, i), enum_desc_label_at(ed, i)) ;
     }
 }
@@ -30,7 +30,7 @@ static void test_static_desc(enum_desc_t ed)
 #include "enum_desc_def.h"
 
 static const struct enum_desc s2_desc = {
-    .value_count = 4,
+    .item_count = 4,
     .values = (const int[5]) { VV1, VV2, VV3, VV4, 0},
     .strs = "s2\0VV1\0VV2\0VV3\0VV4\0\0\0\0\0\0\0\0",
     .lbl_off = (const uint16_t[5]) { 4, 8, 12, 16, 20 },

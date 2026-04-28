@@ -487,7 +487,7 @@ class CEmitter(BaseEmitter):
         parts, offsets = self._build_c_str_parts(block)
         count = len(block.items)
 
-        out.write(f"static const enum_desc_val {sym}_values[] = {{\n")
+        out.write(f"static const int {sym}_values[] = {{\n")
         if count:
             for item in block.items:
                 out.write(f"    {item.value}, /* {item.name} */\n")
@@ -509,7 +509,7 @@ class CEmitter(BaseEmitter):
         out.write('    "\\0\\0\\0\\0\\0\\0\\0\\0";\n\n')
 
         out.write(f"static const struct enum_desc {sym}_obj = {{\n")
-        out.write(f"    .value_count = {count},\n")
+        out.write(f"    .item_count = {count},\n")
         out.write("    .flags = 0,\n")
         out.write(f"    .values = {sym}_values,\n")
         out.write(f"    .lbl_off = {sym}_lbl_off,\n")

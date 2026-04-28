@@ -1,4 +1,4 @@
-Enum: country2 (count=249, symbol=enum_desc_country2, anchor=enum_type_country2, min=16708, max=23127, bytes=2009)
+Enum: country2 (count=249, symbol=enum_req_country2, anchor=enum_type_country2, min=16708, max=23127, bytes=2009)
     ISO2_AD = 16708, ISO2_AE = 16709, ISO2_AF = 16710, ISO2_AG = 16711
     ISO2_AI = 16713, ISO2_AL = 16716, ISO2_AM = 16717, ISO2_AO = 16719
     ISO2_AQ = 16721, ISO2_AR = 16722, ISO2_AS = 16723, ISO2_AT = 16724
@@ -63,7 +63,7 @@ Enum: country2 (count=249, symbol=enum_desc_country2, anchor=enum_type_country2,
     ISO2_YE = 22853, ISO2_YT = 22868, ISO2_ZA = 23105, ISO2_ZM = 23117
     ISO2_ZW = 23127
 
-Enum: country3 (count=191, symbol=enum_desc_country3, anchor=enum_type_country3, min=4, max=894, bytes=1736)
+Enum: country3 (count=191, symbol=enum_req_country3, anchor=enum_type_country3, min=4, max=894, bytes=1736)
     ISO3_AFG = 4, ISO3_ALB = 8, ISO3_ATA = 10, ISO3_DZA = 12
     ISO3_ASM = 16, ISO3_AND = 20, ISO3_AGO = 24, ISO3_ATG = 28
     ISO3_AZE = 31, ISO3_ARG = 32, ISO3_AUS = 36, ISO3_AUT = 40
@@ -113,7 +113,7 @@ Enum: country3 (count=191, symbol=enum_desc_country3, anchor=enum_type_country3,
     ISO3_USA = 840, ISO3_URY = 858, ISO3_UZB = 860, ISO3_VEN = 862
     ISO3_WSM = 882, ISO3_YEM = 887, ISO3_ZMB = 894
 
-Enum: currency (count=154, symbol=enum_desc_currency, anchor=enum_type_currency, min=8, max=986, bytes=1403)
+Enum: currency (count=154, symbol=enum_req_currency, anchor=enum_type_currency, min=8, max=986, bytes=1403)
     ISO3_AED = 784, ISO3_AFN = 971, ISO3_ALL = 8, ISO3_AMD = 51
     ISO3_ANG = 532, ISO3_AOA = 973, ISO3_ARS = 32, ISO3_AUD = 36
     ISO3_AWG = 533, ISO3_AZN = 944, ISO3_BAM = 977, ISO3_BBD = 52

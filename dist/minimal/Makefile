@@ -4,6 +4,8 @@ ENUMDESC_DIR = .
 OBJDIR = .
 PROGRAMS = test_color test_country
 
+setup:
+
 all: $(PROGRAMS)
 
 CFLAGS = -g -I $(ENUMDESC_DIR)

@@ -53,7 +53,7 @@ static tree g_enum_desc_record = NULL_TREE;   /* RECORD_TYPE for struct enum_des
 static bool field_lookup_done ;
 static struct enum_desc_fields {
     tree f_strs;
-    tree f_value_count;
+    tree f_item_count;
     tree f_lbl_off;
     tree f_values;
 } g_enum_desc_fields;
@@ -311,13 +311,13 @@ static void lookup_fields(tree record_type)
 
     g_enum_desc_fields = {
         .f_strs = field_by_name(record_type, "strs"),
-        .f_value_count = field_by_name(record_type, "value_count"),
+        .f_item_count = field_by_name(record_type, "item_count"),
         .f_lbl_off = field_by_name(record_type, "lbl_off"),
         .f_values = field_by_name(record_type, "values")
     };
 
     if (!g_enum_desc_fields.f_strs ||
-        !g_enum_desc_fields.f_value_count ||
+        !g_enum_desc_fields.f_item_count ||
         !g_enum_desc_fields.f_lbl_off ||
         !g_enum_desc_fields.f_values)
     {
@@ -373,7 +373,7 @@ static void emit_enum_desc_for(tree enum_type)
     hash_map<tree, tree> fv ;
 //    struct enum_desc_fields &f = g_enum_desc_fields ;
     struct enum_desc_fields &f = g_enum_desc_fields ;
-    fv.put(f.f_value_count, fold_convert(TREE_TYPE(f.f_value_count), build_int_cst(integer_type_node, (int)items.size())));
+    fv.put(f.f_item_count, fold_convert(TREE_TYPE(f.f_item_count), build_int_cst(integer_type_node, (int)items.size())));
     fv.put(f.f_values, ptr_to_first_elem(val_var, TREE_TYPE(f.f_values)));
     fv.put(f.f_lbl_off, ptr_to_first_elem(off_var, TREE_TYPE(f.f_lbl_off)));
     fv.put(f.f_strs, ptr_to_first_elem(lbl_var, TREE_TYPE(f.f_strs)));

@@ -22,7 +22,7 @@ The next logical step is the reverse conversion - from symbolic name to value. T
 
 Languages that support reflection (`Java`, `Python`, `C#`, ...) will usually provide lookup functions (`EnumClass.valueOf(String)`, `Enum.Parse(...)`), but in C, there is no built-in, standard capability. 
 
-This article discusses a lightweight solution to parse strings into enum value, so that you can write parsing functions:
+This article discusses a lightweight solution to parse strings into enum values, so that you can write parsing functions:
 
 ```c
 ENUM_DESCRIBE(e_color, enum color)
@@ -90,7 +90,7 @@ bool parse_color(const char *label, enum color *var)
         { YELLOW, "YELLOW" },
         { GREEN, "GREEN" },
     } ;
-    for (int i=0 ; i<sizeof(color_lookup)/sizeof(color_lookup[0])) {
+    for (int i=0 ; i<sizeof(color_lookup)/sizeof(color_lookup[0]) ; i++) {
         if ( strcmp(label, color_lookup[i].label) == 0 ) {
                 *var = color_lookup[i].c ;
                 return true ;
@@ -179,7 +179,7 @@ enum color { FOREGROUND, BACKGROUND, HIGHLIGHT, BOLD, LAST } ;
 
 int rgb[LAST] = {
     [FOREGROUND] = 0x000000,  // Black
-    [BACKGROUND] = 0xffffff,  // Aqua
+    [BACKGROUND] = 0xffffff,  // White
     [HIGHLIGHT] = 0xffff00,   // Yellow
     [BOLD] = 0xff0000,        // Red
 } ;
@@ -219,9 +219,9 @@ Once enum metadata is available, parsing is not the only operation we can suppor
 
 Given that the enum metadata is stored in a simple to iterate format, it's possible to iterate over all the values of a single enum. The API provides a few functions to query the enum list
 
-* The `enum_desc_item_count()`, return the number of enumerators.
-* The `enum_desc_label_at()` return the label (const char *) of the enumerator, based on position. Return NULL on bad position.
-* The `enum_desc_value_at()` return the integer value (int) of the enumerator, based on position. Return 0 on bad position.
+* The `enum_desc_item_count()`, returns the number of enumerators.
+* The `enum_desc_label_at()` returns the label (const char *) of the enumerator, based on position. Return NULL on bad position.
+* The `enum_desc_value_at()` returns the integer value (int) of the enumerator, based on position. Return 0 on bad position.
   
 Both function take an enum_desc_t object. The function-like macro ENUM_DESC(tag) can be used to get the descriptor. The following code can list all the enumerators of an enum type:
 ```c
@@ -249,7 +249,7 @@ The reflection API can work on any `enum` - the above code is generic. The `enum
 enum country3 {
     ...
     ISO3_BGR = 100, ISO3_MMR = 104, ISO3_BDI = 108,
-    ISO3_BLR = 112, ISO3_KHM = 116, ISO3_CMR = 120
+    ISO3_BLR = 112, ISO3_KHM = 116, ISO3_CMR = 120,
     ISO3_CAN = 124, ISO3_CPV = 132, ISO3_CYM = 136,
     ...
 }
@@ -274,7 +274,7 @@ Range: [ 4 - 894 ] , unused=700
 The iteration API can also be used to provide custom behavior. For example, to lookup for enumerator using case insensitive match. This will allow referencing the enum using uppercase, lowercase of mixed-case.
 
 ```c
-int enum_parse_case_cmp(enum_desc_t ed, const char *label, int *var)
+bool enum_parse_case_cmp(enum_desc_t ed, const char *label, int *var)
 {
     int count = enum_desc_item_count(ed) ;
     for (int i=0 ; i<count ; i++) {

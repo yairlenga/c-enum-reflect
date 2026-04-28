@@ -39,5 +39,5 @@ clean:
 	rm -f *.tmp *.enum.txt $B/*.o $B/*.exe
 
 realclean: clean
-	rm -f __pycache__
+	rm -rf __pycache__
 	@case "/$B/" in */build/*) sh -x -c "rm -rf $B" ;; esac

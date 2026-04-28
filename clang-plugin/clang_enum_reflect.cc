@@ -4,7 +4,7 @@
 // directly into the AST (no extra generated files).
 //
 // Focuses on:
-//   - value_count
+//   - item_count
 //   - values[]
 //   - lbl_off[]
 //   - strs blob
@@ -41,7 +41,7 @@ static constexpr const char *ENUM_DESC_VAL_STRUCT = "enum_desc_val";
 static constexpr const char *ENUM_DESC_VAL_VALUE_FIELD = "value";
 
 // enum_desc fields
-static constexpr const char *F_value_count = "value_count";
+static constexpr const char *F_item_count = "item_count";
 static constexpr const char *F_flags       = "flags";
 static constexpr const char *F_values      = "values";
 static constexpr const char *F_lbl_off     = "lbl_off";

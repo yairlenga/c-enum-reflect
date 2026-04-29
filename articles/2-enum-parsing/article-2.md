@@ -37,7 +37,7 @@ No hard-coded lookup tables. Always kept in sync with the `enum` definition at b
 
 > In practice, this means enum labels can be part of the input interface, not just internal constants.
 
-### Quick Start
+### Download & Quick Start
 
 Download the latest minimal package (~20KB):
 
@@ -296,7 +296,7 @@ bool enum_parse_case_cmp(enum_desc_t ed, const char *label, int *var)
 - Always in sync with the compiled enum — including external libraries.
 - A small step toward practical reflection in C.
 
-### Small Notes
+### Notes
 
 In addition to the generic API, typed helper functions such as
 `enum_desc_label_of_color()` and `enum_desc_parse_color()` can be generated for convenience.

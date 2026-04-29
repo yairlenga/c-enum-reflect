@@ -8,7 +8,7 @@ setup:
 
 all: $(PROGRAMS)
 
-CFLAGS = -g -I $(ENUMDESC_DIR)
+CFLAGS = -g -I $(ENUMDESC_DIR) -Wall -Werror
 OBJS = $(SRCS:%.c=$(OBJDIR)/%.o)
 
 $(OBJDIR):

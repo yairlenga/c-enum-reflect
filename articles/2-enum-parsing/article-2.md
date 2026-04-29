@@ -29,7 +29,7 @@ ENUM_DESCRIBE(e_color, enum color)
 
 bool parse_color(const char *label, enum color *var)
 {
-    return ENUM_PARSE_TYPE(e_color, label, var) ;
+    return ENUM_PARSE_LABEL(e_color, label, var) ;
 }
 ```
 
@@ -121,7 +121,7 @@ ENUM_DESCRIBE(tag, enum_type)
 // On error:
 //    does NOT modify the variable pointed to by p_enum
 //    return false
-bool ENUM_PARSE_TYPE(enum_tag, const char *label, enum_type *p_enum) ;
+bool ENUM_PARSE_LABEL(enum_tag, const char *label, enum_type *p_enum) ;
 ```
 
 Our parsing function is now simple, short:
@@ -130,7 +130,7 @@ ENUM_DESCRIBE(e_color, enum color)
 
 bool parse_color(const char *label, enum color *var)
 {
-    return ENUM_PARSE_TYPE(e_color, label, var) ;
+    return ENUM_PARSE_LABEL(e_color, label, var) ;
 }
 ```
 No `strcmp`, no lookup tables to create, and no updates needed when enum values change.
@@ -172,7 +172,7 @@ Later, we will discuss other options to make the code more flexible - e.g., resi
 
 ## Validation and Error Reporting
 
-When the `ENUM_PARSE_TYPE()` call fail to match the label, it will return `false`, and will **not** modify the enum variable. This can be used to introduce defaults, and error logging as needed. For example:
+When the `ENUM_PARSE_LABEL()` call fail to match the label, it will return `false`, and will **not** modify the enum variable. This can be used to introduce defaults, and error logging as needed. For example:
 
 ```c
 enum color { FOREGROUND, BACKGROUND, HIGHLIGHT, BOLD, LAST } ;
@@ -188,7 +188,7 @@ ENUM_DESCRIBE(e_color, enum color)
 
 bool parse_color(const char *label, enum color *var)
 {
-    return ENUM_PARSE_TYPE(e_color, label, var) ;
+    return ENUM_PARSE_LABEL(e_color, label, var) ;
 }
 
 void read_rgb(FILE *fp)

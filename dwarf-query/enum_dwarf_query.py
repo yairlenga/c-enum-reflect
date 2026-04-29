@@ -151,7 +151,7 @@ class DwarfEnumExporter:
                 typ = info["type"]
 
                 # Only consider object-ish globals.
-                if bind not in ("STB_LOCAL"):
+                if bind not in ("STB_LOCAL", "STB_GLOBAL", "STB_WEAK"):
                     continue
                 if typ not in ("STT_OBJECT", "STT_NOTYPE"):
                     continue
@@ -510,7 +510,7 @@ class CEmitter(BaseEmitter):
 
         out.write(f"static const struct enum_desc {sym}_obj = {{\n")
         out.write(f"    .item_count = {count},\n")
-        out.write("    .flags = 0,\n")
+        out.write("    .flags = {0},\n")
         out.write(f"    .values = {sym}_values,\n")
         out.write(f"    .lbl_off = {sym}_lbl_off,\n")
         out.write("    .meta = NULL,\n")

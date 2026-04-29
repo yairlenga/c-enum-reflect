@@ -43,15 +43,37 @@ void enum_desc_print(FILE *fp, enum_desc_t ed, bool verbose) ;
 extern const enum_desc_t enum_desc_null ;
 
 #define ENUM_DESC_FUNC(tag) enum_desc_ ## tag
+#define ENUM_DESC_IPARSE(tag) enum_desc_iparse_ ## tag
 #define ENUM_DESC(tag) ENUM_DESC_FUNC(tag)()
 
-#define ENUM_DESCRIBE(tag, enum_type) \
-    static const enum_type enum_type_ ## tag ; \
-    static const char *enum_req_ ## tag = #enum_type ; \
-    extern enum_desc_t ENUM_DESC_FUNC(tag)(void) ; \
-    extern const char * enum_desc_label_of_ ## tag(int val) ;
+#define ENUM_DESC_REQUEST(tag, enum_type) \
+    const enum_type enum_type_ ## tag ; \
+    const char *enum_req_ ## tag = #enum_type ; \
 
-#define ENUM_LABEL_OF(tag, value) enum_desc_label_of(ENUM_DESC(tag), value)
+#define ENUM_DESC_EXTERN(tag, enum_type) \
+	extern enum_desc_t ENUM_DESC_FUNC(tag)(void) ; \
+    extern const char * enum_desc_label_of_ ## tag(int val) ; \
+	extern bool enum_desc_parse_ ## tag(const char *label, enum_type *v) ;
+
+#define ENUM_DESC_INLINE(tag, enum_type) \
+	static inline bool ENUM_DESC_IPARSE(tag)(const char *label, enum_type *v) { \
+		int val=0 ; \
+		bool ok = enum_desc_parse(ENUM_DESC(tag), label, &val) ; \
+		if ( ok ) *v = val ; \
+		return ok ; \
+	}
+
+#define ENUM_DESCRIBE(tag, enum_type) \
+	ENUM_DESC_REQUEST(tag, enum_type) \
+    ENUM_DESC_EXTERN(tag, enum_type) \
+	ENUM_DESC_INLINE(tag, enum_type)
+
+
+#define ENUM_LABEL_OF(tag, value) \
+	enum_desc_label_of(ENUM_DESC(tag), value)
+
+#define ENUM_PARSE_LABEL(tag, label, var) \
+    ENUM_DESC_IPARSE(tag)(label, var)
 
 #ifdef __cplusplus
 }

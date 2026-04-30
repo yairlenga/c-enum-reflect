@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "enum_desc.h"
+#include "enum_desc_core.h"
 
 #ifdef _cplusplus
 extern "C" {

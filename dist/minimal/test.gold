@@ -1,0 +1,14 @@
+=== test_color
+Color(1)=C_RED
+Color(2)=C_YELLOW
+Color(3)=C_GREEN
+Color 'C_RED' is 1
+Color 'C_YELLOW' is 2
+Color 'C_GREEN' is 3
+No Color 'C_BAD'
+=== test_country
+CCY(840)=ISO3_USA
+CCY(826)=ISO3_GBR
+CCY(392)=ISO3_JPN
+CCY(250)=ISO3_FRA
+CCY(276)=ISO3_DEU

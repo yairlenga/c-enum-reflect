@@ -1,8 +1,7 @@
 #ifndef _ENUM_REFL_H_
 #define _ENUM_REFL_H_
 
-
-#include "enum_desc.h"
+#include "enum_desc_core.h"
 
 #ifdef __cplusplus
 extern "C" {

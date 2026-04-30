@@ -57,8 +57,8 @@ $B/t_enum_desc.exe: $B/t_enum_desc.o $(LIB)
 $B/t_enum_refl.exe: $B/t_enum_refl.o $(LIB)
 	gcc $(CFLAGS) -o $@ $^ $(LIB)
 
-$B/t_enum_desc.o: enum_desc.h enum_refl.h enum_desc_def.h
-$B/t_enum_refl.o: enum_desc.h enum_refl.h enum_desc_def.h
+$B/t_enum_desc.o: enum_desc_core.h enum_refl.h enum_desc_def.h
+$B/t_enum_refl.o: enum_desc_core.h enum_refl.h enum_desc_def.h
 
 clean:
 	rm -f $B/*.o $B/*.exe $(LIB) $T/*.result

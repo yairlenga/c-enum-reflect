@@ -8,3 +8,4 @@ build/
 */tests/*.result
 __pycache__/
 gen_*.c
+*.result

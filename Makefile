@@ -1,6 +1,6 @@
 default: all
 
-SUBDIR = api  dwarf-query dist/minimal
+SUBDIR = api  dwarf-query dist/minimal gcc-plugin
 
 setup:
 	for d in $(SUBDIR) ; do make -C $$d $@ ; done

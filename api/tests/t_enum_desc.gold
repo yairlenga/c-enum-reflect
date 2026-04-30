@@ -1,0 +1,68 @@
+Enum 'enum_desc_null_enum' 0 items, dynamic=FALSE, custom=FALSE, offset_sz=2, value_sz=4
+Range: [ 0 - 0 ], unused=1
+Enum 's2' 4 items, dynamic=FALSE, custom=FALSE, offset_sz=2, value_sz=4
+#0: 10 (V1) meta=NO
+#1: 20 (V2) meta=NO
+#2: -30 (V3) meta=NO
+#3: 12345 (V4) meta=NO
+Range: [ -30 - 12345 ], unused=12372
+val(VV3)=-1
+str(VV3)=2
+value(-1)=-1
+str(ZZZ)=-1
+str(VV2)=V2
+int(VV4)=-9999
+Enum 's1' 26 items, dynamic=FALSE, custom=FALSE, offset_sz=2, value_sz=4
+#0: 100 (AAA) meta=First
+#1: 101 (BBB) meta=-
+#2: 102 (CCC) meta=-
+#3: 103 (DDD) meta=-
+#4: 104 (EEE) meta=-
+#5: 200 (FFF) meta=Fifth
+#6: 201 (GGG) meta=-
+#7: 202 (HHH) meta=-
+#8: 203 (III) meta=-
+#9: 204 (JJJ) meta=-
+#10: 300 (KKK) meta=Tenth
+#11: 301 (LLL) meta=-
+#12: 302 (MMM) meta=-
+#13: 303 (NNN) meta=-
+#14: 304 (OOO) meta=-
+#15: 400 (PPP) meta=-
+#16: 401 (QQQ) meta=-
+#17: 402 (RRR) meta=-
+#18: 403 (SSS) meta=-
+#19: 404 (TTT) meta=-
+#20: 500 (UUU) meta=Twentieth
+#21: 501 (VVV) meta=-
+#22: 502 (WWW) meta=-
+#23: 503 (XXX) meta=-
+#24: 504 (YYY) meta=-
+#25: 505 (ZZZ) meta=-
+Range: [ 100 - 505 ], unused=380
+Checked #0: val=100 label='AAA': PASS
+Checked #1: val=101 label='BBB': PASS
+Checked #2: val=102 label='CCC': PASS
+Checked #3: val=103 label='DDD': PASS
+Checked #4: val=104 label='EEE': PASS
+Checked #5: val=200 label='FFF': PASS
+Checked #6: val=201 label='GGG': PASS
+Checked #7: val=202 label='HHH': PASS
+Checked #8: val=203 label='III': PASS
+Checked #9: val=204 label='JJJ': PASS
+Checked #10: val=300 label='KKK': PASS
+Checked #11: val=301 label='LLL': PASS
+Checked #12: val=302 label='MMM': PASS
+Checked #13: val=303 label='NNN': PASS
+Checked #14: val=304 label='OOO': PASS
+Checked #15: val=400 label='PPP': PASS
+Checked #16: val=401 label='QQQ': PASS
+Checked #17: val=402 label='RRR': PASS
+Checked #18: val=403 label='SSS': PASS
+Checked #19: val=404 label='TTT': PASS
+Checked #20: val=500 label='UUU': PASS
+Checked #21: val=501 label='VVV': PASS
+Checked #22: val=502 label='WWW': PASS
+Checked #23: val=503 label='XXX': PASS
+Checked #24: val=504 label='YYY': PASS
+Checked #25: val=505 label='ZZZ': PASS

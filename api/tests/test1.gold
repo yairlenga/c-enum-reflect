@@ -248,7 +248,7 @@ Enum 'country2' 249 items, dynamic=TRUE, custom=FALSE, offset_sz=2, value_sz=4
 #246: 23105 (ISO2_ZA) meta=-
 #247: 23117 (ISO2_ZM) meta=-
 #248: 23127 (ISO2_ZW) meta=-
-Range: [ 16708 - 23127 ] , unused=6171
+Range: [ 16708 - 23127 ], unused=6171
 Enum 'country3' 191 items, dynamic=TRUE, custom=FALSE, offset_sz=2, value_sz=4
 #0: 4 (ISO3_AFG) meta=-
 #1: 8 (ISO3_ALB) meta=-
@@ -441,7 +441,7 @@ Enum 'country3' 191 items, dynamic=TRUE, custom=FALSE, offset_sz=2, value_sz=4
 #188: 882 (ISO3_WSM) meta=-
 #189: 887 (ISO3_YEM) meta=-
 #190: 894 (ISO3_ZMB) meta=-
-Range: [ 4 - 894 ] , unused=700
+Range: [ 4 - 894 ], unused=700
 Enum 'currency' 154 items, dynamic=TRUE, custom=FALSE, offset_sz=2, value_sz=4
 #0: 784 (ISO3_AED) meta=-
 #1: 971 (ISO3_AFN) meta=-
@@ -597,4 +597,4 @@ Enum 'currency' 154 items, dynamic=TRUE, custom=FALSE, offset_sz=2, value_sz=4
 #151: 710 (ISO3_ZAR) meta=-
 #152: 967 (ISO3_ZMW) meta=-
 #153: 932 (ISO3_ZWL) meta=-
-Range: [ 8 - 986 ] , unused=825
+Range: [ 8 - 986 ], unused=825

@@ -67,6 +67,12 @@ bool enum_desc_parse(enum_desc_t ed, const char *label, int *value)
 	return true ;
 }
 
+int enum_desc_value_of(enum_desc_t ed, const char *label, int def_value)
+{
+	enum_desc_parse(ed, label, &def_value) ;
+	return def_value ;
+}
+
 void enum_desc_destroy(enum_desc_t ed)
 {
 	enum_desc_ext_t ext = ed->ext ;
@@ -100,5 +106,5 @@ void enum_desc_print(FILE *fp, enum_desc_t ed, bool verbose)
 		const char *meta_txt = verbose ? item_meta ?: "-" : item_meta ? "YES" : "NO" ;
 		printf("#%d: %d (%s) meta=%s\n", i, item_val, item_label, meta_txt) ;
     }
-	printf("Range: [ %d - %d ] , unused=%d\n", value_min, value_max, value_max-value_min+1-item_count) ;
+	printf("Range: [ %d - %d ], unused=%d\n", value_min, value_max, value_max-value_min+1-item_count) ;
 }

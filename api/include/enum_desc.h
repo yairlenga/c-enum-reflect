@@ -24,6 +24,7 @@ int enum_desc_value_at(enum_desc_t ed, int idx) ;
 void * enum_desc_meta_at(enum_desc_t ed, int idx) ;
 
 const char *enum_desc_label_of(enum_desc_t ed, int value) ;
+int enum_desc_value_of(enum_desc_t t, const char *label, int def_value) ;
 bool enum_desc_parse(enum_desc_t ed, const char *label, int *value) ;
 
 void enum_desc_destroy(enum_desc_t ed) ;

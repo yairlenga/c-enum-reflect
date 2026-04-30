@@ -26,6 +26,7 @@ void * enum_desc_meta_at(enum_desc_t ed, enum_desc_idx idx) ;
 
 const char *enum_desc_label_of(enum_desc_t ed, int value) ;
 bool enum_desc_parse(enum_desc_t ed, const char *label, int *value) ;
+int enum_desc_value_of(enum_desc_t ed, const char *label, int def_value) ;
 
 void enum_desc_destroy(enum_desc_t ed) ;
 extern const struct enum_desc_ext enum_desc_default_ext ;

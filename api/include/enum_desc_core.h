@@ -21,7 +21,9 @@ int enum_desc_find_by_label(enum_desc_t ed, const char *label) ;
 int enum_desc_find_by_value(enum_desc_t ed, int value) ;
 const char * enum_desc_label_at(enum_desc_t ed, int idx) ;
 int enum_desc_value_at(enum_desc_t ed, int idx) ;
-void * enum_desc_meta_at(enum_desc_t ed, int idx) ;
+
+const char *enum_desc_ann(enum_desc_t ed) ;
+const char *enum_desc_ann_at(enum_desc_t ed, int idx) ;
 
 const char *enum_desc_label_of(enum_desc_t ed, int value) ;
 int enum_desc_value_of(enum_desc_t t, const char *label, int def_value) ;

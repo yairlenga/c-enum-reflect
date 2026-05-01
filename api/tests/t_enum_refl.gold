@@ -1,8 +1,8 @@
-Enum 's2' 4 items, dynamic=FALSE, custom=FALSE, offset_sz=2, value_sz=4
-#0: 10 (V1) meta=NO
-#1: 20 (V2) meta=NO
-#2: -30 (V3) meta=NO
-#3: 12345 (V4) meta=NO
+Enum 's2' 4 items, dynamic=FALSE, custom=FALSE, offset_sz=2, value_sz=4, ann=(null)
+#0: 10 (V1) ann=NO
+#1: 20 (V2) ann=NO
+#2: -30 (V3) ann=NO
+#3: 12345 (V4) ann=NO
 Range: [ -30 - 12345 ], unused=12372
 val(VV3)=-1
 str(VV3)=2

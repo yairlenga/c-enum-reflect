@@ -20,13 +20,13 @@ int enum_refl_find_by_label(enum_desc_t ed, const char *label) ;
 
 int enum_refl_value_at(enum_desc_t ed, int idx) ;
 const char * enum_refl_label_at(enum_desc_t ed, int idx) ;
-void *enum_refl_meta_at(enum_desc_t ed, int idx) ;
+const char *enum_refl_ann_at(enum_desc_t ed, int idx) ;
 void *enum_refl_state_at(enum_desc_t ed, int idx) ;
 
 struct enum_desc_entry {
 	int value ;
 	const char *name ;
-	void *meta ;
+	void *ann ;
 }  ;
 
 enum_desc_t enum_refl_build(const char *name, struct enum_desc_entry entries[], int n_entries, enum_desc_ext_t ext) ;

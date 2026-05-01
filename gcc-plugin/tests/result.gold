@@ -1,7 +1,7 @@
-Enum 'currency' 5 items, dynamic=FALSE, custom=FALSE, offset_sz=2, value_sz=4
-#0: 840 (USD) meta=-
-#1: 978 (EUR) meta=-
-#2: 826 (JPY) meta=-
-#3: 826 (GBP) meta=-
-#4: 36 (AUD) meta=-
+Enum 'currency' 5 items, dynamic=FALSE, custom=FALSE, offset_sz=2, value_sz=4, ann=(null)
+#0: 840 (USD) ann=-
+#1: 978 (EUR) ann=-
+#2: 826 (JPY) ann=-
+#3: 826 (GBP) ann=-
+#4: 36 (AUD) ann=-
 Range: [ 36 - 978 ], unused=938

@@ -19,20 +19,21 @@ struct enum_desc_flags {
 
 /// @brief Enum description structure
 struct enum_desc {
-//	const char *name ;                  // Name is stored at the start of lbl_str blob, no need to duplicate it here.
-	struct enum_desc_flags flags ;      // flags ;
+//	uint16_t name_off ;                // offset to enum name
+	uint32_t enum_ann ;                // offset to enum annotations
+	struct enum_desc_flags flags ;     // flags ;
 	uint16_t item_count ;              // Number of items in the enum, also size of values[] and lbl_off[]
-	const int *values ;		// Array of enum values, in declaration order.
-	const uint16_t *lbl_off ;			// Array of offsets into strs for each label, in declaration order.
-	void **meta ;						// Optional array of per-item metadata, in declaration order. NULL if not used.
-	enum_desc_ext_t ext ;				// Optional pointer to extension struct, for dynamic descs or extra features. NULL if not used.
-	const char *strs ;                  // null separated list of name, labels + 8 nul padding.
+	const int *values ;		           // Array of enum values, in declaration order.
+	const uint16_t *lbl_off ;          // Array of offsets into strs for each label, in declaration order.
+	const uint32_t *ann_off ;          // Annotation offsets
+	enum_desc_ext_t ext ;              // Optional pointer to extension struct, for dynamic descs or extra features. NULL if not used.
+	const char *strs ;                 // null separated list of name, labels + 8 nul padding.
 } ;
 
 /// @brief 
 struct enum_desc_ext {
-	void *enum_cxt ;                                                        // private data, free by destroy
-	void **item_cxt ;														// private per-item data, free by destroy
+	void *enum_ext ;                                                        // private data, free by destroy
+	void **item_ext ;														// private per-item data, free by destroy
 	void (*destroy)(enum_desc_t ed) ;
 	int (*find_by_value)(enum_desc_t ed, int value) ;
 	int (*find_by_label)(enum_desc_t ed, const char *label) ;
@@ -73,9 +74,8 @@ static inline const char * label_at(enum_desc_t ed, int idx)
 static inline int find_by_label(enum_desc_t ed, const char *name)
 {
 	int name_len_p1 = strlen(name)+1 ;
-	const char *lbl_str = ed->strs ;
 	for (int i=0 ; i<ed->item_count ; i++) {
-		if ( !memcmp(lbl_str + ed->lbl_off[i], name, name_len_p1) ) return i ;
+		if ( !memcmp(name, label_at(ed, i), name_len_p1) ) return i ;
 	}
 	return ENUM_DESC_NOT_FOUND ;
 }

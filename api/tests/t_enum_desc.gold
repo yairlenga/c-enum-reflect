@@ -1,10 +1,10 @@
-Enum 'enum_desc_null_enum' 0 items, dynamic=FALSE, custom=FALSE, offset_sz=2, value_sz=4
+Enum 'enum_desc_null_enum' 0 items, dynamic=FALSE, custom=FALSE, offset_sz=2, value_sz=4, ann=(null)
 Range: [ 0 - 0 ], unused=1
-Enum 's2' 4 items, dynamic=FALSE, custom=FALSE, offset_sz=2, value_sz=4
-#0: 10 (V1) meta=NO
-#1: 20 (V2) meta=NO
-#2: -30 (V3) meta=NO
-#3: 12345 (V4) meta=NO
+Enum 's2' 4 items, dynamic=FALSE, custom=FALSE, offset_sz=2, value_sz=4, ann=(null)
+#0: 10 (V1) ann=NO
+#1: 20 (V2) ann=NO
+#2: -30 (V3) ann=NO
+#3: 12345 (V4) ann=NO
 Range: [ -30 - 12345 ], unused=12372
 val(VV3)=-1
 str(VV3)=2
@@ -12,33 +12,33 @@ value(-1)=-1
 str(ZZZ)=-1
 str(VV2)=V2
 int(VV4)=-9999
-Enum 's1' 26 items, dynamic=FALSE, custom=FALSE, offset_sz=2, value_sz=4
-#0: 100 (AAA) meta=First
-#1: 101 (BBB) meta=-
-#2: 102 (CCC) meta=-
-#3: 103 (DDD) meta=-
-#4: 104 (EEE) meta=-
-#5: 200 (FFF) meta=Fifth
-#6: 201 (GGG) meta=-
-#7: 202 (HHH) meta=-
-#8: 203 (III) meta=-
-#9: 204 (JJJ) meta=-
-#10: 300 (KKK) meta=Tenth
-#11: 301 (LLL) meta=-
-#12: 302 (MMM) meta=-
-#13: 303 (NNN) meta=-
-#14: 304 (OOO) meta=-
-#15: 400 (PPP) meta=-
-#16: 401 (QQQ) meta=-
-#17: 402 (RRR) meta=-
-#18: 403 (SSS) meta=-
-#19: 404 (TTT) meta=-
-#20: 500 (UUU) meta=Twentieth
-#21: 501 (VVV) meta=-
-#22: 502 (WWW) meta=-
-#23: 503 (XXX) meta=-
-#24: 504 (YYY) meta=-
-#25: 505 (ZZZ) meta=-
+Enum 's1' 26 items, dynamic=FALSE, custom=FALSE, offset_sz=2, value_sz=4, ann=s1
+#0: 100 (AAA) ann=First
+#1: 101 (BBB) ann=-
+#2: 102 (CCC) ann=-
+#3: 103 (DDD) ann=-
+#4: 104 (EEE) ann=-
+#5: 200 (FFF) ann=Fifth
+#6: 201 (GGG) ann=-
+#7: 202 (HHH) ann=-
+#8: 203 (III) ann=-
+#9: 204 (JJJ) ann=-
+#10: 300 (KKK) ann=Tenth
+#11: 301 (LLL) ann=-
+#12: 302 (MMM) ann=-
+#13: 303 (NNN) ann=-
+#14: 304 (OOO) ann=-
+#15: 400 (PPP) ann=-
+#16: 401 (QQQ) ann=-
+#17: 402 (RRR) ann=-
+#18: 403 (SSS) ann=-
+#19: 404 (TTT) ann=-
+#20: 500 (UUU) ann=NO_20
+#21: 501 (VVV) ann=-
+#22: 502 (WWW) ann=-
+#23: 503 (XXX) ann=-
+#24: 504 (YYY) ann=-
+#25: 505 (ZZZ) ann=-
 Range: [ 100 - 505 ], unused=380
 Checked #0: val=100 label='AAA': PASS
 Checked #1: val=101 label='BBB': PASS

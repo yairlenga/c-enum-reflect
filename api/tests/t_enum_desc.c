@@ -48,9 +48,10 @@ static const struct enum_desc s1_desc = {
 static const struct enum_desc s2_desc = {
     .item_count = S2_COUNT,
     .values = (const int[S2_COUNT]) { AAA, BBB, CCC, DDD, EEE, FFF, GGG, HHH, III, JJJ, KKK, LLL, MMM, NNN, OOO, PPP, QQQ, RRR, SSS, TTT, UUU, VVV, WWW, XXX, YYY, ZZZ},
-    .strs = "s1\0AAA\0BBB\0CCC\0DDD\0EEE\0FFF\0GGG\0HHH\0III\0JJJ\0KKK\0LLL\0MMM\0NNN\0OOO\0PPP\0QQQ\0RRR\0SSS\0TTT\0UUU\0VVV\0WWW\0XXX\0YYY\0ZZZ\0\0\0\0\0\0\0",
+    .strs = "s1\0AAA\0BBB\0CCC\0DDD\0EEE\0FFF\0GGG\0HHH\0III\0JJJ\0KKK\0LLL\0MMM\0NNN\0OOO\0PPP\0QQQ\0RRR\0SSS\0TTT\0UUU\0VVV\0WWW\0XXX\0YYY\0ZZZ\0\0"
+            "Fifth\0Tenth\0First\0NO_20\0\0\0\0\0\0\0\0\0",
     .lbl_off = (const uint16_t[S2_COUNT+1]) { 3, 7, 11, 15, 19, 23, 27, 31, 35, 39, 43, 47, 51, 55, 59, 63, 67, 71, 75, 79, 83, 87, 91, 95, 99, 103 },
-    .meta = (void *[S2_COUNT+1]) { [5] = "Fifth", [10] = "Tenth", [20] = "Twentieth", [0] = "First", },
+    .ann_off = (const uint32_t [S2_COUNT+1]) { [5] = 108, [10] = 114, [20] = 126, [0] = 120 },
 } ;
 
 int main(int argc, char **argv)

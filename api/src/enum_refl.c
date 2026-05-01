@@ -34,19 +34,19 @@ int enum_refl_value_at(enum_desc_t ed, int idx)
 {
 //	enum_desc_ext_t extra = ed->ext ;
 //	if ( extra && extra->label_at ) return extra->value_at(ed, idx) ;
-	return valid_index(ed, idx) ? ed->values[idx] : 0 ;
+	return valid_index(ed, idx) ? value_at(ed, idx) : 0 ;
 }
 
 const char * enum_refl_label_at(enum_desc_t ed, int idx)
 {
 //	enum_desc_ext_t extra = ed->ext ;
 //	if ( extra && extra->label_at ) return extra->label_at(ed, idx) ;
-	return valid_index(ed, idx) ? enum_desc_label_at(ed, idx) : NULL ;
+	return valid_index(ed, idx) ? label_at(ed, idx) : NULL ;
 }
 
-void *enum_refl_meta_at(enum_desc_t ed, int idx) 
+const char *enum_refl_ann_at(enum_desc_t ed, int idx) 
 {
-	return valid_index(ed, idx) && ed->meta ? ed->meta[idx] : NULL ;
+	return enum_desc_ann_at(ed, idx) ;
 }
 
 int enum_refl_value_of(enum_desc_t ed, const char *label, int default_value)
@@ -66,7 +66,7 @@ void *enum_refl_state_of(enum_desc_t ed, int value)
 	int idx = enum_refl_find_by_value(ed, value) ;
 	if (idx == ENUM_DESC_NOT_FOUND ) return NULL ;
 	enum_desc_ext_t ext = ed->ext ;
-	void **item_cxt = ext ? ext->item_cxt : NULL ;
+	void **item_cxt = ext ? ext->item_ext : NULL ;
 	if ( !item_cxt ) return NULL ;
 	return item_cxt[idx] ;
 }
@@ -90,29 +90,40 @@ enum_desc_t enum_refl_build(const char *name, struct enum_desc_entry entries[], 
 {
 	int count = 0 ;
 	int strs_len = strlen(name)+1 ; // include enum name
-	bool has_meta = false ;
+	int ann_len = 0 ;
+	bool has_ann = false ;
 	if ( n_entries < 0 ) n_entries = INT_MAX ;
 	while ( count < n_entries && entries[count].name) {
-		if ( entries[count].meta ) has_meta = true ;
+		if ( entries[count].ann ) {
+			has_ann = true ;
+			ann_len += strlen(entries[count].ann)+1 ;
+		}
 		strs_len += strlen(entries[count].name)+1 ;
 		count++ ;
 	}
-	strs_len+=2 ;
-	char *strs = calloc(strs_len + _Alignof(max_align_t), 1) ;
+	char *strs = calloc(strs_len + ann_len + 2 + _Alignof(max_align_t), sizeof(*strs)) ;
 	strcpy(strs, name) ;
-	int off = strlen(name)+1 ;
 	int *values = calloc(count+1, sizeof(*values)) ;
 	uint16_t *label_off = calloc(count+1, sizeof(*label_off)) ;
-	void **meta = has_meta ? calloc(count+1, sizeof(*meta)) : NULL ;
+	uint32_t *ann_off = has_ann ? calloc(count+1, sizeof(*ann_off)) : NULL ;
 
+	int label_pos = strlen(name)+1 ;
+	int ann_pos = strs_len+1 ;         // Leave Extra NUL
 	for(int i=0; i<count ; i++ ) {
 		struct enum_desc_entry *e = &entries[i] ;
-		label_off[i] = off ;
+		label_off[i] = label_pos ;
 		values[i] = e->value ;
-		if ( meta ) meta[i] = e->meta ;
-		strcpy(strs + off, e->name) ;
-		off += strlen(strs+off)+1 ;
+		int label_len = strlen(e->name) ;
+		memcpy(strs + label_pos, e->name, label_len) ;
+		label_pos += label_len + 1 ;
+		if ( ann_off && e->ann ) {
+			ann_off[i] = ann_pos ;
+			int ann_len = strlen(e->ann) ;
+			memcpy(strs + ann_pos, e->ann, ann_len) ;
+			ann_pos += ann_len + 1 ;
+		}
 	}
+
 	struct enum_desc *ed = calloc(1, sizeof(*ed)) ;
 	*ed = (struct enum_desc) {
 //		.name = strdup(name),
@@ -121,7 +132,7 @@ enum_desc_t enum_refl_build(const char *name, struct enum_desc_entry entries[], 
 		.values = values,
 		.strs = strs,
 		.lbl_off = label_off,
-		.meta = meta,
+		.ann_off = ann_off,
 		.ext = ext ?: &enum_desc_dynamic_ext,
 	};
 	return ed ;
